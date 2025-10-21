@@ -12,19 +12,20 @@ import { AlertCircle, ArrowUp, Clock, Minus, Signal } from "lucide-react";
 type Props = {
   task: Task;
   onTaskUpdated: () => void;
+  userRole?: string; 
 };
 
-const TaskCard = ({ task, onTaskUpdated }: Props) => {
+const TaskCard = ({ task, onTaskUpdated, userRole }: Props) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [editedDescription, setEditedDescription] = useState(task.description || "");
   
-  // Safe priority handling with fallback
+ 
   const getSafePriority = (priority: any): Priority => {
     if (priority && Object.values(Priority).includes(priority as Priority)) {
       return priority as Priority;
     }
-    return Priority.Medium; // Default fallback
+    return Priority.Medium; 
   };
   
   const [editedPriority, setEditedPriority] = useState<Priority>(
@@ -136,6 +137,9 @@ const TaskCard = ({ task, onTaskUpdated }: Props) => {
   };
 
   const handleStatusChange = async (newStatus: string) => {
+    
+    if (userRole !== 'admin') return;
+    
     try {
       await updateTaskStatus({
         taskId: task.id,
@@ -148,6 +152,9 @@ const TaskCard = ({ task, onTaskUpdated }: Props) => {
   };
 
   const handlePriorityChange = async (newPriority: Priority) => {
+    
+    if (userRole !== 'admin') return;
+    
     try {
       await updateTask({
         id: task.id,
@@ -166,80 +173,91 @@ const TaskCard = ({ task, onTaskUpdated }: Props) => {
 
   return (
     <div className="mb-3 rounded bg-white p-4 shadow dark:bg-dark-secondary dark:text-white relative">
-      {/* Action Buttons */}
-      <div className="absolute top-2 right-2 flex space-x-2">
-        <button
-          onClick={handleEditToggle}
-          disabled={isLoading}
-          className="px-2 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 disabled:opacity-50"
-        >
-          {isEditing ? 'Cancel' : 'Edit'}
-        </button>
-        <button
-          onClick={handleDelete}
-          disabled={isLoading}
-          className="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 disabled:opacity-50"
-        >
-          {isDeleting ? 'Deleting...' : 'Delete'}
-        </button>
-      </div>
-
-      {isEditing ? (
-        // Edit Mode
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium mb-1">Title*</label>
-            <input
-              type="text"
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              className="w-full p-2 border rounded dark:bg-dark-primary dark:text-white"
-              disabled={isLoading}
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea
-              value={editedDescription}
-              onChange={(e) => setEditedDescription(e.target.value)}
-              className="w-full p-2 border rounded dark:bg-dark-primary dark:text-white"
-              rows={3}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Priority</label>
-            <select
-              value={editedPriority}
-              onChange={(e) => setEditedPriority(e.target.value as Priority)}
-              className="w-full p-2 border rounded dark:bg-dark-primary dark:text-white"
-              disabled={isLoading}
-            >
-              {Object.entries(priorityConfig).map(([value, config]) => (
-                <option key={value} value={value}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
+      {/* Action Buttons - Only show for admins */}
+      {userRole === 'admin' && (
+        <div className="absolute top-2 right-2 flex space-x-2">
           <button
-            onClick={handleSave}
+            onClick={handleEditToggle}
             disabled={isLoading}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+            className="px-2 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 disabled:opacity-50"
           >
-            {isUpdating ? 'Saving...' : 'Save Changes'}
+            {isEditing ? 'Cancel' : 'Edit'}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={isLoading}
+            className="px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 disabled:opacity-50"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </button>
         </div>
+      )}
+
+      {isEditing ? (
+        // Edit Mode - Only accessible for admins
+        userRole === 'admin' ? (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Title*</label>
+              <input
+                type="text"
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                className="w-full p-2 border rounded dark:bg-dark-primary dark:text-white"
+                disabled={isLoading}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Description</label>
+              <textarea
+                value={editedDescription}
+                onChange={(e) => setEditedDescription(e.target.value)}
+                className="w-full p-2 border rounded dark:bg-dark-primary dark:text-white"
+                rows={3}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Priority</label>
+              <select
+                value={editedPriority}
+                onChange={(e) => setEditedPriority(e.target.value as Priority)}
+                className="w-full p-2 border rounded dark:bg-dark-primary dark:text-white"
+                disabled={isLoading}
+              >
+                {Object.entries(priorityConfig).map(([value, config]) => (
+                  <option key={value} value={value}>
+                    {config.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={handleSave}
+              disabled={isLoading}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+            >
+              {isUpdating ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        ) : (
+          
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold">{task.title}</h3>
+            <p className="text-gray-600 dark:text-gray-400">{task.description || "No description provided"}</p>
+           
+          </div>
+        )
       ) : (
         // View Mode
         <div className="space-y-3">
           <h3 className="text-lg font-semibold">{task.title}</h3>
           <p className="text-gray-600 dark:text-gray-400">{task.description || "No description provided"}</p>
           
-          {/* Priority Display with Quick Change */}
+          {/* Priority Display */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="font-medium">Priority:</span>
@@ -249,44 +267,53 @@ const TaskCard = ({ task, onTaskUpdated }: Props) => {
               </div>
             </div>
             
-            {/* Quick Priority Change */}
-            <div className="flex gap-1">
-              {Object.entries(priorityConfig).map(([value, config]) => {
-                const ConfigIcon = config.icon;
-                const priorityValue = value as Priority;
-                return (
-                  <button
-                    key={value}
-                    onClick={() => handlePriorityChange(priorityValue)}
-                    disabled={isUpdating || priorityValue === editedPriority}
-                    className={`p-1 rounded border ${
-                      priorityValue === editedPriority 
-                        ? `${config.bgColor} ${config.borderColor} ${config.color} dark:${config.darkBgColor} dark:${config.darkColor}`
-                        : 'bg-gray-100 border-gray-200 text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-500 dark:hover:bg-gray-600'
-                    } disabled:opacity-30`}
-                    title={`Set to ${config.label}`}
-                  >
-                    <ConfigIcon size={14} />
-                  </button>
-                );
-              })}
-            </div>
+           
+            {userRole === 'admin' && (
+              <div className="flex gap-1">
+                {Object.entries(priorityConfig).map(([value, config]) => {
+                  const ConfigIcon = config.icon;
+                  const priorityValue = value as Priority;
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => handlePriorityChange(priorityValue)}
+                      disabled={isUpdating || priorityValue === editedPriority}
+                      className={`p-1 rounded border ${
+                        priorityValue === editedPriority 
+                          ? `${config.bgColor} ${config.borderColor} ${config.color} dark:${config.darkBgColor} dark:${config.darkColor}`
+                          : 'bg-gray-100 border-gray-200 text-gray-400 hover:bg-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-500 dark:hover:bg-gray-600'
+                      } disabled:opacity-30`}
+                      title={`Set to ${config.label}`}
+                    >
+                      <ConfigIcon size={14} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Status */}
           <div className="flex items-center gap-2">
             <span className="font-medium">Status:</span>
-            <select
-              value={task.status || ''}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              disabled={isUpdatingStatus}
-              className="border rounded p-1 dark:bg-dark-primary dark:text-white"
-            >
-              <option value="To Do">To Do</option>
-              <option value="Work In Progress">Work In Progress</option>
-              <option value="Under Review">Under Review</option>
-              <option value="Completed">Completed</option>
-            </select>
+            {userRole === 'admin' ? (
+              <select
+                value={task.status || ''}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                disabled={isUpdatingStatus}
+                className="border rounded p-1 dark:bg-dark-primary dark:text-white"
+              >
+                <option value="To Do">To Do</option>
+                <option value="Work In Progress">Work In Progress</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Completed">Completed</option>
+              </select>
+            ) : (
+             
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm">
+                {task.status || 'To Do'}
+              </span>
+            )}
           </div>
 
           {/* Tags */}

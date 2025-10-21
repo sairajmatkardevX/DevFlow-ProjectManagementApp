@@ -14,7 +14,7 @@ const ModalNewTask = ({ isOpen, onClose, id = null, onTaskCreated }: Props) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<Status>(Status.ToDo);
-  const [priority, setPriority] = useState<Priority>(Priority.Medium); // Default to Medium
+  const [priority, setPriority] = useState<Priority>(Priority.Medium);
   const [tags, setTags] = useState("");
   const [startDate, setStartDate] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -25,7 +25,7 @@ const ModalNewTask = ({ isOpen, onClose, id = null, onTaskCreated }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // FIXED VALIDATION LOGIC:
+    
     const hasProjectId = id !== null || projectId.trim() !== "";
     if (!title.trim() || !authorUserId.trim() || !hasProjectId) {
       alert("Please fill in all required fields");
@@ -33,14 +33,14 @@ const ModalNewTask = ({ isOpen, onClose, id = null, onTaskCreated }: Props) => {
     }
 
     try {
-      // Calculate final project ID
+      
       const finalProjectId = id !== null ? Number(id) : Number(projectId);
       
       console.log('Creating task with:', {
         title: title.trim(),
         authorUserId: parseInt(authorUserId),
         projectId: finalProjectId,
-        priority // Added priority to logs
+        priority 
       });
 
       await createTask({
@@ -64,7 +64,7 @@ const ModalNewTask = ({ isOpen, onClose, id = null, onTaskCreated }: Props) => {
       setTitle("");
       setDescription("");
       setStatus(Status.ToDo);
-      setPriority(Priority.Medium); // Reset to Medium
+      setPriority(Priority.Medium); 
       setTags("");
       setStartDate("");
       setDueDate("");

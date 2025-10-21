@@ -1,4 +1,4 @@
-// app/store.ts
+
 'use client';
 
 import { configureStore } from "@reduxjs/toolkit";
@@ -15,7 +15,7 @@ import {
 } from "redux-persist";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import { combineReducers } from "@reduxjs/toolkit";
-// Import React Redux hooks here
+
 import { useDispatch, useSelector } from "react-redux";
 
 const createNoopStorage = () => ({
@@ -52,10 +52,10 @@ export const store = configureStore({
     }).concat(api.middleware),
 });
 
-// Export types
+
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
-// Export hooks FROM THIS FILE
+
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector = useSelector.withTypes<RootState>();
