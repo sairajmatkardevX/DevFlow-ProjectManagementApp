@@ -6,7 +6,7 @@ interface RouteParams {
     id: string
   }
 }
-
+export const dynamic = 'force-dynamic';
 // PATCH /api/tasks/[id]/status - Update task status
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {

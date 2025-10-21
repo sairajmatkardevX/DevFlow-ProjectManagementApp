@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
+export const dynamic = 'force-dynamic';
 // DELETE /api/teams/[id]/members/[userId] - Remove user from team
 export async function DELETE(
   request: NextRequest,

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 interface RouteParams {
   params: { id: string }
 }
-
+export const dynamic = 'force-dynamic';
 // GET /api/users/[id]
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {

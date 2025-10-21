@@ -6,7 +6,7 @@ interface RouteParams {
     userId: string
   }
 }
-
+export const dynamic = 'force-dynamic';
 // GET /api/tasks/user/[userId] - Get user tasks
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {

@@ -6,7 +6,7 @@ interface RouteParams {
     id: string
   }
 }
-
+export const dynamic = 'force-dynamic';
 // POST /api/teams/[id]/members - Add user to team
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
