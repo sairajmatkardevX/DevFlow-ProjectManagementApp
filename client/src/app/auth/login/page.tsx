@@ -1,10 +1,10 @@
-
 "use client";
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { api } from "@/state/api"; // RTK Query
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -31,6 +31,9 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password");
       } else {
+        // Clear RTK Query cache to avoid showing stale data
+        api.util.resetApiState();
+
         router.push("/");
         router.refresh();
       }
@@ -65,7 +68,7 @@ export default function LoginPage() {
               {message}
             </div>
           )}
-          
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}

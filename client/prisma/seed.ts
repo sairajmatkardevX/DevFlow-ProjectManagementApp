@@ -40,27 +40,28 @@ async function main() {
   }
 
   // STEP 2: Create ALL users
-  console.log('👤 Creating users...')
-  const usersData = read("user.json")
-  const userMap = new Map<number, any>()
+  // STEP 2: Create ALL users
+console.log('👤 Creating users...')
+const usersData = read("user.json")
+const userMap = new Map<number, any>()
+
+for (let i = 0; i < usersData.length; i++) {
+  const userData = usersData[i]
+  const password = await bcrypt.hash(userData.password, 12)
   
-  for (let i = 0; i < usersData.length; i++) {
-    const userData = usersData[i]
-    const password = await bcrypt.hash(userData.password, 12)
-    
-    const user = await prisma.user.create({
-      data: {
-        username: userData.username,
-        email: userData.email,
-        password: password,
-        role: userData.role,
-        profilePictureUrl: userData.profilePictureUrl,
-        teamId: userData.teamId ? teamMap.get(userData.teamId)?.id : null,
-      }
-    })
-    userMap.set(i + 1, user)
-    console.log(` Created user: ${user.username} (ID: ${user.userId})`)
-  }
+  const user = await prisma.user.create({
+    data: {
+      username: userData.username,
+      email: userData.email,
+      password: password,
+      role: userData.role?.toLowerCase() || "user", // ✅ ensures lowercase
+      profilePictureUrl: userData.profilePictureUrl,
+      teamId: userData.teamId ? teamMap.get(userData.teamId)?.id : null,
+    }
+  })
+  userMap.set(i + 1, user)
+  console.log(` Created user: ${user.username} (ID: ${user.userId})`)
+}
 
   // STEP 3: Update teams with user references
   console.log('🔗 Updating team user references...')

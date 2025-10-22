@@ -6,12 +6,12 @@ export default withAuth(
     const token = req.nextauth.token;
     const pathname = req.nextUrl.pathname;
 
-    
+    // Redirect unauthenticated users to login
     if (!token) {
       return NextResponse.redirect(new URL("/auth/login", req.url));
     }
 
-   
+    // Restrict admin routes
     if (pathname.startsWith("/dashboard/admin") && token?.role !== "admin") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
@@ -26,7 +26,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-  ],
+  matcher: ["/dashboard/:path*"],
 };
