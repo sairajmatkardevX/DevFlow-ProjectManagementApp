@@ -134,7 +134,7 @@ export interface TaskAssignment {
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL + '/api',
+    baseUrl:  '/api',
   }),
   reducerPath: "api",
   tagTypes: ["Projects", "Tasks", "Users", "Teams", "Search"],
