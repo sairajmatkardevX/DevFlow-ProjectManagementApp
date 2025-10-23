@@ -3,7 +3,7 @@
     "username": "AliceJones",
     "email": "alice@devflow.com",
     "password": "password123",
-    "role": "ADMIN",
+    "role": "admin",
     "profilePictureUrl": "p1.jpeg",
     "teamId": 1
   },
@@ -11,7 +11,7 @@
     "username": "BobSmith",
     "email": "bob@devflow.com", 
     "password": "password123",
-    "role": "ADMIN",
+    "role": "admin",
     "profilePictureUrl": "p2.jpeg",
     "teamId": 1
   },
@@ -19,7 +19,7 @@
     "username": "CarolWhite",
     "email": "carol@devflow.com",
     "password": "password123",
-    "role": "USER",
+    "role": "user",
     "profilePictureUrl": "p3.jpeg",
     "teamId": 2
   },
@@ -27,7 +27,7 @@
     "username": "DavidBrown",
     "email": "david@devflow.com",
     "password": "password123",
-    "role": "USER", 
+    "role": "user", 
     "profilePictureUrl": "p4.jpeg",
     "teamId": 2
   },
@@ -35,7 +35,7 @@
     "username": "EmmaWilson",
     "email": "emma@devflow.com",
     "password":"password123",
-    "role": "USER",
+    "role": "user",
     "profilePictureUrl": "p5.jpeg",
     "teamId": 3
   },
@@ -43,7 +43,7 @@
     "username": "FrankMiller",
     "email": "frank@devflow.com",
     "password": "password123",
-    "role": "USER",
+    "role": "user",
     "profilePictureUrl": "p6.jpeg", 
     "teamId": 3
   },
@@ -51,7 +51,7 @@
     "username": "GraceLee",
     "email": "grace@devflow.com",
     "password": "password123",
-    "role": "USER",
+    "role": "user",
     "profilePictureUrl": "p7.jpeg",
     "teamId": 4
   },
@@ -59,7 +59,7 @@
     "username": "HenryTaylor",
     "email": "henry@devflow.com",
     "password": "password123",
-    "role": "USER",
+    "role": "user",
     "profilePictureUrl": "p8.jpeg",
     "teamId": 4
   },
@@ -67,7 +67,7 @@
     "username": "IvyChen",
     "email": "ivy@devflow.com",
     "password": "$2a$10$K8w.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6",
-    "role": "USER",
+    "role": "user",
     "profilePictureUrl": "p9.jpeg",
     "teamId": 5
   },
@@ -75,7 +75,7 @@
     "username": "JackDavis",
     "email": "jack@devflow.com",
     "password": "password123", 
-    "role": "USER",
+    "role": "user",
     "profilePictureUrl": "p10.jpeg",
     "teamId": 5
   },
@@ -83,7 +83,7 @@
     "username": "KatieMoore",
     "email": "katie@devflow.com",
     "password": "password123",
-    "role": "USER",
+    "role": "user",
     "profilePictureUrl": "p11.jpeg",
     "teamId": 1
   },
@@ -91,7 +91,7 @@
     "username": "LeoRodriguez",
     "email": "leo@devflow.com",
     "password": "password123",
-    "role": "USER", 
+    "role": "user", 
     "profilePictureUrl": "p12.jpeg",
     "teamId": 2
   },
@@ -99,7 +99,7 @@
     "username": "MiaGarcia",
     "email": "mia@devflow.com",
     "password": "password123",
-    "role": "USER",
+    "role": "user",
     "profilePictureUrl": "p13.jpeg",
     "teamId": 3
   }
