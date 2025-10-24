@@ -4,13 +4,10 @@
 import React from "react";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
-import { useAppSelector } from "@/app/store";
 import "@/app/globals.css";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-  const isSidebarCollapsed = useAppSelector(
-    (state) => state.global.isSidebarCollapsed
-  );
+
 
   return (
     

@@ -1,21 +1,18 @@
-
 'use client';
 
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { api } from "@/state/api";
 import globalReducer from "@/state";
-import {
-  persistReducer,
-  FLUSH,
-  REHYDRATE,
-  PAUSE,
-  PERSIST,
-  PURGE,
-  REGISTER,
+import { 
+  persistReducer, 
+  FLUSH, 
+  REHYDRATE, 
+  PAUSE, 
+  PERSIST, 
+  PURGE, 
+  REGISTER 
 } from "redux-persist";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
-import { combineReducers } from "@reduxjs/toolkit";
-
 import { useDispatch, useSelector } from "react-redux";
 
 const createNoopStorage = () => ({
@@ -25,14 +22,14 @@ const createNoopStorage = () => ({
 });
 
 const storage =
-  typeof window === "undefined"
-    ? createNoopStorage()
-    : createWebStorage("local");
+  typeof window !== "undefined"
+    ? createWebStorage("local")
+    : createNoopStorage();
 
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["global"],
+  whitelist: ["global"], 
 };
 
 const rootReducer = combineReducers({
@@ -52,10 +49,8 @@ export const store = configureStore({
     }).concat(api.middleware),
 });
 
-
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector = useSelector.withTypes<RootState>();
