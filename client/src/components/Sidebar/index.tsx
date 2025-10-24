@@ -4,7 +4,7 @@ import {
   Home, Briefcase, LucideIcon, User, Users, X, 
   ChevronUp, ChevronDown, AlertCircle, ShieldAlert, 
   AlertOctagon, AlertTriangle, Layers3, FolderOpen, 
-  Loader2, Workflow, BarChart3, Zap, Menu
+  Loader2, Workflow, BarChart3, Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from "@/app/store"
@@ -19,13 +19,16 @@ const Sidebar = () => {
   const [showProjects, setShowProjects] = useState(true);
   const [showPriority, setShowPriority] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const { data: projects, isLoading, error } = useGetProjectsQuery();
   const dispatch = useAppDispatch();
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed);
 
- 
+  // Critical: Only run client-side effects after mount
   useEffect(() => {
+    setMounted(true);
+    
     const checkScreenSize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
@@ -65,6 +68,23 @@ const Sidebar = () => {
     isSidebarCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
   );
 
+  // Show loading state until client-side mounted
+  if (!mounted) {
+    return (
+      <div className={cn(
+        "fixed top-0 left-0 flex flex-col h-full justify-between shadow-xl",
+        "w-16 bg-background border-r border-border z-40"
+      )}>
+        <div className="flex flex-col items-center py-4 space-y-4">
+          <div className="h-8 w-8 bg-muted rounded-lg animate-pulse"></div>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-8 w-8 bg-muted rounded-md animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -77,7 +97,7 @@ const Sidebar = () => {
 
       <div className={sidebarClassNames}>
         <div className="flex h-full w-full flex-col justify-start">
-          {/* Logo Section - Matches Navbar */}
+          {/* Logo Section */}
           <div className={cn(
             "flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-b border-border",
             "transition-all duration-300",
@@ -337,6 +357,7 @@ const Sidebar = () => {
   );
 };
 
+// SidebarLink component remains the same as your original
 interface SidebarLinkProps {
   href: string;
   icon: LucideIcon;
@@ -393,7 +414,6 @@ const SidebarLink = ({
           )} />
         </div>
 
-       
         {!isCollapsed && (
           <div className="flex flex-col flex-1 min-w-0">
             <span className={cn(

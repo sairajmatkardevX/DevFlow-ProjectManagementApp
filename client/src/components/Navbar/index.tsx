@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import { api } from "@/state/api"; // import RTK Query API
+import { api } from "@/state/api";
 
 const Navbar = () => {
   const dispatch = useAppDispatch();
@@ -22,26 +22,30 @@ const Navbar = () => {
   const [imageError, setImageError] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
-
+  // Critical: Only run client-side effects after mount
   useEffect(() => {
+    setMounted(true);
+    
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    
     checkMobile();
+    handleScroll();
+    
+    window.addEventListener("scroll", handleScroll);
     window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", checkMobile);
+    };
   }, []);
 
   const handleLogout = async () => {
     try {
-      await signOut({ redirect: false }); // log out without redirect
-      api.util.resetApiState();           // clear RTK Query cache
-      window.location.href = "/auth/login"; // then redirect
+      await signOut({ redirect: false });
+      api.util.resetApiState();
+      window.location.href = "/auth/login";
     } catch {
       window.location.href = "/auth/login";
     }
@@ -50,6 +54,7 @@ const Navbar = () => {
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const toggleSidebar = () => dispatch(setIsSidebarCollapsed(!isSidebarCollapsed));
 
+  // Show loading state until client-side mounted
   if (!mounted) {
     return (
       <div className="flex items-center justify-between bg-background/95 backdrop-blur px-4 sm:px-6 py-3 border-b">
@@ -69,6 +74,9 @@ const Navbar = () => {
                      'U';
   const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'User';
   const userRole = session?.user?.role || 'Member';
+
+  // Safe to use theme and window properties now
+  const currentTheme = theme || 'light'; // Fallback for initial render
 
   return (
     <div className={cn(
@@ -131,8 +139,8 @@ const Navbar = () => {
         <Separator orientation="vertical" className="h-6 hidden sm:block" />
 
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8 sm:h-9 sm:w-9"
-          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          title={currentTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+          {currentTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
 
         <Button asChild variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" title="Settings">

@@ -7,7 +7,7 @@ import {
   useGetProjectsQuery,
   useGetTasksQuery,
 } from "@/state/api";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useSession } from "next-auth/react"; 
 import Header from "@/components/Header";
 import {
@@ -32,6 +32,8 @@ import { useTheme } from "next-themes";
 
 const Dashboard = () => {
   const { data: session, status: sessionStatus } = useSession(); 
+  const [mounted, setMounted] = useState(false);
+  
   const {
     data: tasks,
     isLoading: tasksLoading,
@@ -49,9 +51,14 @@ const Dashboard = () => {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
 
-  // Debug logging
+  // Critical: Only run after client-side mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Debug logging - only on client
   React.useEffect(() => {
-    if (sessionStatus === 'authenticated') {
+    if (mounted && sessionStatus === 'authenticated') {
       console.log('🔐 Session:', {
         email: session?.user?.email,
         role: session?.user?.role,
@@ -59,25 +66,25 @@ const Dashboard = () => {
         name: session?.user?.name
       });
     }
-  }, [session, sessionStatus]);
+  }, [session, sessionStatus, mounted]);
 
   React.useEffect(() => {
-    if (tasks) {
+    if (mounted && tasks) {
       console.log('📝 Tasks loaded:', {
         count: tasks.length,
         sample: tasks[0]
       });
     }
-    if (projects) {
+    if (mounted && projects) {
       console.log('📁 Projects loaded:', {
         count: projects.length,
         sample: projects[0]
       });
     }
-  }, [tasks, projects]);
+  }, [tasks, projects, mounted]);
 
-  // Loading state
-  if (sessionStatus === 'loading' || tasksLoading || isProjectsLoading) {
+  // Show loading state until mounted and data is loading
+  if (!mounted || sessionStatus === 'loading' || tasksLoading || isProjectsLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -296,7 +303,7 @@ const Dashboard = () => {
   // Show message if no data after filtering
   if (userTasks.length === 0 && userProjects.length === 0) {
     return (
-      <div className="h-full flex flex-col space-y-6">
+      <div className="h-full flex flex-col space-y-6" suppressHydrationWarning>
         <Header name="Project Management Dashboard" />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-4">
@@ -314,7 +321,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="h-full flex flex-col space-y-6">
+    <div className="h-full flex flex-col space-y-6" suppressHydrationWarning>
       <Header name="Project Management Dashboard" />
       
       {/* Stats Grid */}
