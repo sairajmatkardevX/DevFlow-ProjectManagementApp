@@ -83,6 +83,199 @@ const Dashboard = () => {
     }
   }, [tasks, projects, mounted]);
 
+  // ✅ ALL HOOKS MUST BE CALLED UNCONDITIONALLY BEFORE ANY RETURNS
+  
+  const isAdmin = session?.user?.role?.toLowerCase() === 'admin';
+  const currentUserId = session?.user?.id;
+
+  // Filter data based on user role
+  const userTasks = useMemo(() => {
+    if (!tasks) return [];
+    
+    if (isAdmin) {
+      console.log('✅ Admin user - showing all tasks');
+      return tasks;
+    }
+    
+    // For regular users, show tasks assigned to them
+    const filtered = tasks.filter(task => {
+      const assigneeId = task.assignedUserId || task.assignee?.userId || task.assignee?.id;
+      const matches = assigneeId === currentUserId || 
+                     assigneeId === Number(currentUserId) || 
+                     String(assigneeId) === String(currentUserId);
+      return matches;
+    });
+    
+    console.log('🔍 Filtered tasks:', { 
+      total: tasks.length, 
+      filtered: filtered.length,
+      currentUserId 
+    });
+    
+    return filtered;
+  }, [tasks, isAdmin, currentUserId]);
+
+  const userProjects = useMemo(() => {
+    if (!projects) return [];
+    
+    if (isAdmin) {
+      console.log('✅ Admin user - showing all projects');
+      return projects;
+    }
+    
+    const filtered = projects.filter(project => {
+      const isTeamMember = project.teamMembers?.some(member => 
+        member.id === currentUserId || 
+        member.userId === currentUserId ||
+        String(member.id) === String(currentUserId)
+      );
+      return isTeamMember;
+    });
+    
+    console.log('🔍 Filtered projects:', { 
+      total: projects.length, 
+      filtered: filtered.length,
+      currentUserId 
+    });
+    
+    return filtered;
+  }, [projects, isAdmin, currentUserId]);
+
+  // Priority count for tasks
+  const priorityCount = useMemo(() => {
+    return userTasks.reduce(
+      (acc: Record<string, number>, task: Task) => {
+        const { priority } = task;
+        acc[priority as Priority] = (acc[priority as Priority] || 0) + 1;
+        return acc;
+      },
+      {},
+    );
+  }, [userTasks]);
+
+  const taskDistribution = useMemo(() => {
+    return Object.keys(priorityCount).map((key) => ({
+      name: key,
+      count: priorityCount[key],
+    }));
+  }, [priorityCount]);
+
+  // Project status count
+  const statusCount = useMemo(() => {
+    return userProjects.reduce(
+      (acc: Record<string, number>, project: Project) => {
+        const status = project.endDate ? "Completed" : "Active";
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {},
+    );
+  }, [userProjects]);
+
+  const projectStatus = useMemo(() => {
+    return Object.keys(statusCount).map((key) => ({
+      name: key,
+      count: statusCount[key],
+    }));
+  }, [statusCount]);
+
+  // Task status count
+  const taskStatusCount = useMemo(() => {
+    return userTasks.reduce(
+      (acc: Record<string, number>, task: Task) => {
+        const status = task.status?.toLowerCase() || 'unknown';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {},
+    );
+  }, [userTasks]);
+
+  // Helper functions
+  const getPriorityColor = (priority: string) => {
+    switch (priority?.toLowerCase()) {
+      case 'urgent': return 'destructive';
+      case 'high': return 'default';
+      case 'medium': return 'secondary';
+      case 'low': return 'outline';
+      default: return 'outline';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'in progress': 
+      case 'in_progress':
+        return <Clock className="h-4 w-4 text-blue-500" />;
+      case 'todo': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      default: return <Target className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
+
+  // Calculate completion rate
+  const completionRate = useMemo(() => {
+    return userTasks.length > 0 
+      ? Math.round(((taskStatusCount['completed'] || 0) / userTasks.length) * 100)
+      : 0;
+  }, [userTasks, taskStatusCount]);
+
+  // Stats data
+  const stats = useMemo(() => {
+    return [
+      {
+        title: isAdmin ? "Total Projects" : "My Projects",
+        value: userProjects.length.toString(),
+        icon: <FolderOpen className="h-6 w-6 text-primary" />,
+        description: isAdmin 
+          ? `${statusCount['Active'] || 0} active, ${statusCount['Completed'] || 0} completed`
+          : `${statusCount['Active'] || 0} active projects`,
+        trend: "+12%",
+      },
+      {
+        title: isAdmin ? "Total Tasks" : "My Tasks",
+        value: userTasks.length.toString(),
+        icon: <Target className="h-6 w-6 text-primary" />,
+        description: `${taskStatusCount['completed'] || 0} completed`,
+        trend: "+8%",
+      },
+      {
+        title: isAdmin ? "Team Members" : "My Team",
+        value: isAdmin ? "24" : "8",
+        icon: <Users className="h-6 w-6 text-primary" />,
+        description: isAdmin ? "Across all projects" : "In my projects",
+        trend: "+5%",
+      },
+      {
+        title: "Completion Rate",
+        value: `${completionRate}%`,
+        icon: <TrendingUp className="h-6 w-6 text-primary" />,
+        description: isAdmin ? "Project success rate" : "My task completion",
+        trend: "+3%",
+      },
+    ];
+  }, [isAdmin, userProjects.length, userTasks.length, statusCount, taskStatusCount, completionRate]);
+
+  const getChartColor = (index: number) => {
+    const colors = [
+      'hsl(var(--primary))',
+      'hsl(var(--secondary))',
+      'hsl(var(--destructive))',
+      'hsl(var(--accent))',
+      'hsl(var(--muted-foreground))'
+    ];
+    return colors[index % colors.length];
+  };
+
+  const tooltipStyle = {
+    backgroundColor: isDarkMode ? 'hsl(222.2 84% 4.9%)' : 'hsl(0 0% 100%)',
+    borderColor: isDarkMode ? 'hsl(217.2 32.6% 17.5%)' : 'hsl(214.3 31.8% 91.4%)',
+    borderRadius: '8px',
+    color: isDarkMode ? 'hsl(210 40% 98%)' : 'hsl(222.2 84% 4.9%)',
+  };
+
+  // ✅ NOW WE CAN HAVE CONDITIONAL RETURNS (after all hooks)
+
   // Show loading state until mounted and data is loading
   if (!mounted || sessionStatus === 'loading' || tasksLoading || isProjectsLoading) {
     return <DashboardSkeleton />;
@@ -124,182 +317,6 @@ const Dashboard = () => {
     );
   }
 
-  const isAdmin = session?.user?.role?.toLowerCase() === 'admin';
-  const currentUserId = session?.user?.id;
-
-  console.log('👤 User Info:', { isAdmin, currentUserId });
-
-  // Filter data based on user role - with improved logic
-  const userTasks = useMemo(() => {
-    if (isAdmin) {
-      console.log('✅ Admin user - showing all tasks');
-      return tasks;
-    }
-    
-    // For regular users, show tasks assigned to them
-    const filtered = tasks.filter(task => {
-      // Check multiple possible ID formats
-      const assigneeId = task.assignedUserId || task.assignee?.userId || task.assignee?.id;
-      const matches = assigneeId === currentUserId || 
-                     assigneeId === Number(currentUserId) || 
-                     String(assigneeId) === String(currentUserId);
-      return matches;
-    });
-    
-    console.log('🔍 Filtered tasks:', { 
-      total: tasks.length, 
-      filtered: filtered.length,
-      currentUserId 
-    });
-    
-    return filtered;
-  }, [tasks, isAdmin, currentUserId]);
-
-  const userProjects = useMemo(() => {
-    if (isAdmin) {
-      console.log('✅ Admin user - showing all projects');
-      return projects;
-    }
-    
-    // For regular users, show projects they're part of
-    const filtered = projects.filter(project => {
-      // Check if user is in team members
-      const isTeamMember = project.teamMembers?.some(member => 
-        member.id === currentUserId || 
-        member.userId === currentUserId ||
-        String(member.id) === String(currentUserId)
-      );
-      return isTeamMember;
-    });
-    
-    console.log('🔍 Filtered projects:', { 
-      total: projects.length, 
-      filtered: filtered.length,
-      currentUserId 
-    });
-    
-    return filtered;
-  }, [projects, isAdmin, currentUserId]);
-
-  // Priority count for tasks
-  const priorityCount = userTasks.reduce(
-    (acc: Record<string, number>, task: Task) => {
-      const { priority } = task;
-      acc[priority as Priority] = (acc[priority as Priority] || 0) + 1;
-      return acc;
-    },
-    {},
-  );
-
-  const taskDistribution = Object.keys(priorityCount).map((key) => ({
-    name: key,
-    count: priorityCount[key],
-  }));
-
-  // Project status count
-  const statusCount = userProjects.reduce(
-    (acc: Record<string, number>, project: Project) => {
-      const status = project.endDate ? "Completed" : "Active";
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    },
-    {},
-  );
-
-  const projectStatus = Object.keys(statusCount).map((key) => ({
-    name: key,
-    count: statusCount[key],
-  }));
-
-  // Task status count
-  const taskStatusCount = userTasks.reduce(
-    (acc: Record<string, number>, task: Task) => {
-      const status = task.status?.toLowerCase() || 'unknown';
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    },
-    {},
-  );
-
-  // Helper functions
-  const getPriorityColor = (priority: string) => {
-    switch (priority?.toLowerCase()) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'default';
-      case 'medium': return 'secondary';
-      case 'low': return 'outline';
-      default: return 'outline';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'in progress': 
-      case 'in_progress':
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'todo': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      default: return <Target className="h-4 w-4 text-muted-foreground" />;
-    }
-  };
-
-  // Calculate completion rate
-  const completionRate = userTasks.length > 0 
-    ? Math.round(((taskStatusCount['completed'] || 0) / userTasks.length) * 100)
-    : 0;
-
-  // Stats data
-  const stats = [
-    {
-      title: isAdmin ? "Total Projects" : "My Projects",
-      value: userProjects.length.toString(),
-      icon: <FolderOpen className="h-6 w-6 text-primary" />,
-      description: isAdmin 
-        ? `${statusCount['Active'] || 0} active, ${statusCount['Completed'] || 0} completed`
-        : `${statusCount['Active'] || 0} active projects`,
-      trend: "+12%",
-    },
-    {
-      title: isAdmin ? "Total Tasks" : "My Tasks",
-      value: userTasks.length.toString(),
-      icon: <Target className="h-6 w-6 text-primary" />,
-      description: `${taskStatusCount['completed'] || 0} completed`,
-      trend: "+8%",
-    },
-    {
-      title: isAdmin ? "Team Members" : "My Team",
-      value: isAdmin ? "24" : "8",
-      icon: <Users className="h-6 w-6 text-primary" />,
-      description: isAdmin ? "Across all projects" : "In my projects",
-      trend: "+5%",
-    },
-    {
-      title: "Completion Rate",
-      value: `${completionRate}%`,
-      icon: <TrendingUp className="h-6 w-6 text-primary" />,
-      description: isAdmin ? "Project success rate" : "My task completion",
-      trend: "+3%",
-    },
-  ];
-
-  const getChartColor = (index: number) => {
-    const colors = [
-      'hsl(var(--primary))',
-      'hsl(var(--secondary))',
-      'hsl(var(--destructive))',
-      'hsl(var(--accent))',
-      'hsl(var(--muted-foreground))'
-    ];
-    return colors[index % colors.length];
-  };
-
-  const tooltipStyle = {
-    backgroundColor: isDarkMode ? 'hsl(222.2 84% 4.9%)' : 'hsl(0 0% 100%)',
-    borderColor: isDarkMode ? 'hsl(217.2 32.6% 17.5%)' : 'hsl(214.3 31.8% 91.4%)',
-    borderRadius: '8px',
-    color: isDarkMode ? 'hsl(210 40% 98%)' : 'hsl(222.2 84% 4.9%)',
-  };
-
   // Show message if no data after filtering
   if (userTasks.length === 0 && userProjects.length === 0) {
     return (
@@ -320,6 +337,7 @@ const Dashboard = () => {
     );
   }
 
+  // ... rest of your component JSX remains the same
   return (
     <div className="h-full flex flex-col space-y-6" suppressHydrationWarning>
       <Header name="Project Management Dashboard" />

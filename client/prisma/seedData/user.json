@@ -4,7 +4,7 @@
     "email": "alice@devflow.com",
     "password": "password123",
     "role": "admin",
-    "profilePictureUrl": "p1.jpeg",
+    "profilePictureUrl": "/p1.jpeg",
     "teamId": 1
   },
   {
@@ -12,7 +12,7 @@
     "email": "bob@devflow.com", 
     "password": "password123",
     "role": "admin",
-    "profilePictureUrl": "p2.jpeg",
+    "profilePictureUrl": "/p2.jpeg",
     "teamId": 1
   },
   {
@@ -20,7 +20,7 @@
     "email": "carol@devflow.com",
     "password": "password123",
     "role": "user",
-    "profilePictureUrl": "p3.jpeg",
+    "profilePictureUrl": "/p3.jpeg",
     "teamId": 2
   },
   {
@@ -28,7 +28,7 @@
     "email": "david@devflow.com",
     "password": "password123",
     "role": "user", 
-    "profilePictureUrl": "p4.jpeg",
+    "profilePictureUrl": "/p4.jpeg",
     "teamId": 2
   },
   {
@@ -36,7 +36,7 @@
     "email": "emma@devflow.com",
     "password":"password123",
     "role": "user",
-    "profilePictureUrl": "p5.jpeg",
+    "profilePictureUrl": "/p5.jpeg",
     "teamId": 3
   },
   {
@@ -44,7 +44,7 @@
     "email": "frank@devflow.com",
     "password": "password123",
     "role": "user",
-    "profilePictureUrl": "p6.jpeg", 
+    "profilePictureUrl": "/p6.jpeg", 
     "teamId": 3
   },
   {
@@ -52,7 +52,7 @@
     "email": "grace@devflow.com",
     "password": "password123",
     "role": "user",
-    "profilePictureUrl": "p7.jpeg",
+    "profilePictureUrl": "/p7.jpeg",
     "teamId": 4
   },
   {
@@ -60,7 +60,7 @@
     "email": "henry@devflow.com",
     "password": "password123",
     "role": "user",
-    "profilePictureUrl": "p8.jpeg",
+    "profilePictureUrl": "/p8.jpeg",
     "teamId": 4
   },
   {
@@ -68,7 +68,7 @@
     "email": "ivy@devflow.com",
     "password": "$2a$10$K8w.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6",
     "role": "user",
-    "profilePictureUrl": "p9.jpeg",
+    "profilePictureUrl": "/p9.jpeg",
     "teamId": 5
   },
   {
@@ -76,7 +76,7 @@
     "email": "jack@devflow.com",
     "password": "password123", 
     "role": "user",
-    "profilePictureUrl": "p10.jpeg",
+    "profilePictureUrl": "/p10.jpeg",
     "teamId": 5
   },
   {
@@ -84,7 +84,7 @@
     "email": "katie@devflow.com",
     "password": "password123",
     "role": "user",
-    "profilePictureUrl": "p11.jpeg",
+    "profilePictureUrl": "/p11.jpeg",
     "teamId": 1
   },
   {
@@ -92,7 +92,7 @@
     "email": "leo@devflow.com",
     "password": "password123",
     "role": "user", 
-    "profilePictureUrl": "p12.jpeg",
+    "profilePictureUrl": "/p12.jpeg",
     "teamId": 2
   },
   {
@@ -100,7 +100,7 @@
     "email": "mia@devflow.com",
     "password": "password123",
     "role": "user",
-    "profilePictureUrl": "p13.jpeg",
+    "profilePictureUrl": "/p13.jpeg",
     "teamId": 3
   }
 ]

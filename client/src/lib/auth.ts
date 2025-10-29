@@ -9,36 +9,26 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // ✅ Changed: 30 days instead of 15 minutes
-  },
-  // ✅ Added: Cookie configuration for production
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === "production", // true in production
-      },
-    },
+    maxAge: 30 * 24 * 60 * 60,
   },
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          console.log("❌ Missing email or password");
-          return null;
-        }
-
         try {
+          // Validate input
+          if (!credentials?.email || !credentials?.password) {
+            console.log("❌ Missing credentials");
+            return null;
+          }
+
+          // Find user
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
+            where: { email: credentials.email.toLowerCase().trim() },
           });
 
           if (!user) {
@@ -46,48 +36,54 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
+          // Check if user has password (for OAuth users)
           if (!user.password) {
-            console.log("❌ User has no password set:", user.userId);
+            console.log("❌ No password set for user:", user.userId);
             return null;
           }
 
+          // Verify password
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
           );
 
           if (!isPasswordValid) {
-            console.log("❌ Invalid password for user:", user.userId);
+            console.log("❌ Invalid password for user:", user.email);
             return null;
           }
 
-          console.log("✅ Login successful for:", user.email); // ✅ Added
-
-          // Return the shape NextAuth expects
           return {
             id: user.userId.toString(),
             email: user.email,
-            name: user.username || user.email,
+            name: user.username || user.email.split("@")[0],
             role: user.role || "user",
-            image: user.profilePictureUrl || null,
+            image: user.profilePictureUrl || "/p1.jpeg", // Default image
           };
         } catch (error) {
-          console.error("💥 Authorize error:", error);
+          console.error("💥 Auth error:", error);
           return null;
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // Initial sign in
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.name = user.name;
         token.email = user.email;
         token.picture = user.image;
-        console.log("🔑 JWT created with role:", user.role); // ✅ Added
+        console.log("🔑 JWT created for:", user.email);
       }
+
+      // Update session if needed
+      if (trigger === "update" && session) {
+        token = { ...token, ...session };
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -96,10 +92,16 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string;
         session.user.name = token.name as string;
         session.user.email = token.email as string;
-        session.user.image = token.picture as string | null;
-        console.log("📋 Session created with role:", token.role); // ✅ Added
+        session.user.image = token.picture as string;
       }
+
+      console.log("📋 Session created for:", session.user.email);
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
   pages: {
@@ -107,5 +109,5 @@ export const authOptions: NextAuthOptions = {
     signUp: "/auth/register",
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: true, // ✅ Changed: Always debug for now
+  debug: process.env.NODE_ENV === "development",
 };

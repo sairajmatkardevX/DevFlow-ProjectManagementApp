@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { api } from "@/state/api"; // RTK Query
@@ -16,29 +16,54 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const message = searchParams.get("message");
 
+  // Clear any existing session on component mount
+  useEffect(() => {
+    const clearSession = async () => {
+      try {
+        // Force clear the session cache
+        await fetch('/api/auth/session', { method: 'DELETE' });
+      } catch (error) {
+        // Ignore errors, just try to clear
+      }
+    };
+    clearSession();
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
+      // Clear RTK Query cache first
+      api.util.resetApiState();
+
       const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
       });
 
+      console.log("Login result:", result);
+
       if (result?.error) {
         setError("Invalid email or password");
-      } else {
-        // Clear RTK Query cache to avoid showing stale data
-        api.util.resetApiState();
+        // Clear form on error
+        setPassword("");
+      } else if (result?.ok) {
+        // Force a session refresh
+        const session = await getSession();
+        console.log("Session after login:", session);
 
-        router.push("/");
-        router.refresh();
+        // Use window.location for full page reload to clear all caches
+        window.location.href = "/dashboard";
+      } else {
+        setError("Login failed. Please try again.");
       }
     } catch (error) {
+      console.error("Login error:", error);
       setError("Login failed. Please try again.");
+      setPassword("");
     } finally {
       setLoading(false);
     }
@@ -94,6 +119,7 @@ export default function LoginPage() {
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
                   />
                 </div>
               </div>
@@ -114,6 +140,7 @@ export default function LoginPage() {
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
