@@ -39,14 +39,21 @@ async function main() {
     console.log(` Created team: ${team.teamName} (ID: ${team.id})`)
   }
 
-  // STEP 2: Create ALL users
-  // STEP 2: Create ALL users
+  
+// STEP 2: Create ALL users
 console.log('👤 Creating users...')
 const usersData = read("user.json")
 const userMap = new Map<number, any>()
 
 for (let i = 0; i < usersData.length; i++) {
   const userData = usersData[i]
+  
+  // 🔍 ADD DEBUG HERE:
+  console.log('🔍 PASSWORD DEBUG:')
+  console.log('Raw password from JSON:', userData.password)
+  console.log('Password length:', userData.password.length)
+  console.log('Password characters:', Array.from(userData.password).map(c => c.charCodeAt(0)))
+  
   const password = await bcrypt.hash(userData.password, 12)
   
   const user = await prisma.user.create({
@@ -54,7 +61,7 @@ for (let i = 0; i < usersData.length; i++) {
       username: userData.username,
       email: userData.email,
       password: password,
-      role: userData.role?.toLowerCase() || "user", // ✅ ensures lowercase
+      role: userData.role?.toLowerCase() || "user",
       profilePictureUrl: userData.profilePictureUrl,
       teamId: userData.teamId ? teamMap.get(userData.teamId)?.id : null,
     }

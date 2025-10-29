@@ -19,10 +19,9 @@ const Navbar = () => {
   const { data: session, status } = useSession();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  /
+  // Critical: Only run client-side effects after mount
   useEffect(() => {
     setMounted(true);
     
@@ -54,7 +53,7 @@ const Navbar = () => {
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const toggleSidebar = () => dispatch(setIsSidebarCollapsed(!isSidebarCollapsed));
 
-  
+  // Show loading state until client-side mounted AND session is loaded
   if (!mounted || status === "loading") {
     return (
       <div className="flex items-center justify-between bg-background/95 backdrop-blur px-4 sm:px-6 py-3 border-b">
@@ -75,7 +74,7 @@ const Navbar = () => {
   const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'User';
   const userRole = session?.user?.role || 'Member';
 
-  
+  // Safe to use theme and window properties now
   const currentTheme = theme || 'light';
 
   return (
@@ -114,19 +113,8 @@ const Navbar = () => {
         </Button>
 
         <div className="flex items-center gap-2">
-          <div className="relative">
-            {session?.user?.image && !imageError ? (
-              <img
-                src={session.user.image}
-                alt={userName}
-                className="h-8 w-8 rounded-full object-cover border border-border shadow-sm"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="h-8 w-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm">
-                {userInitial}
-              </div>
-            )}
+          <div className="h-8 w-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+            {userInitial}
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-medium text-foreground">{userName}</p>

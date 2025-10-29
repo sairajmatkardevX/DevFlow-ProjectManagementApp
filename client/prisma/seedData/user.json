@@ -66,7 +66,7 @@
   {
     "username": "IvyChen",
     "email": "ivy@devflow.com",
-    "password": "$2a$10$K8w.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6.6Bd6",
+    "password": "password123",
     "role": "user",
     "profilePictureUrl": "/p9.jpeg",
     "teamId": 5
