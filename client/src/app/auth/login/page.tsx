@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
@@ -11,9 +11,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
   const searchParams = useSearchParams();
   const message = searchParams.get("message");
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,14 +27,12 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      console.log("Login result:", result);
-
       if (result?.error) {
         setError("Invalid email or password");
         setPassword("");
       } else if (result?.ok) {
-        // Force hard redirect to refresh everything
-        window.location.href = "/dashboard";
+        // Redirect to the intended destination
+        window.location.href = callbackUrl;
       } else {
         setError("Login failed. Please try again.");
       }
