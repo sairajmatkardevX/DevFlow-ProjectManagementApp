@@ -18,36 +18,24 @@ import { cn } from '@/lib/utils';
 const Sidebar = () => {
   const [showProjects, setShowProjects] = useState(true);
   const [showPriority, setShowPriority] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const { data: projects, isLoading, error } = useGetProjectsQuery();
   const dispatch = useAppDispatch();
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed);
 
-  // Critical: Only run client-side effects after mount
+  // Simplified mount effect - remove all complex logic
   useEffect(() => {
     setMounted(true);
-    
-    const checkScreenSize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile && !isSidebarCollapsed) {
-        dispatch(setIsSidebarCollapsed(true));
-      }
-    };
-
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, [dispatch, isSidebarCollapsed]);
+  }, []);
 
   const toggleSidebar = () => {
     dispatch(setIsSidebarCollapsed(!isSidebarCollapsed));
   };
 
   const closeSidebar = () => {
-    if (isMobile) {
+    // Simple close logic
+    if (window.innerWidth < 768) {
       dispatch(setIsSidebarCollapsed(true));
     }
   };
@@ -84,7 +72,6 @@ const Sidebar = () => {
       </div>
     );
   }
-
   return (
     <>
       {/* Mobile Overlay */}
