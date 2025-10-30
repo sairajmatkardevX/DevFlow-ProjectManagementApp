@@ -21,22 +21,22 @@ export default function LoginPage() {
     setError("");
 
     try {
+      // Let NextAuth handle the redirect automatically
       const result = await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        redirect: true, // Changed from false to true
+        callbackUrl: callbackUrl,
       });
 
-      console.log("Login result:", result);
-
+      // If we get here, redirect didn't happen automatically
+      console.log("Login result (no auto redirect):", result);
+      
       if (result?.error) {
         setError("Invalid email or password");
         setPassword("");
-      } else if (result?.ok) {
-        console.log("✅ Login successful, redirecting to:", callbackUrl);
-        // Use hard redirect to ensure complete refresh
-        window.location.href = callbackUrl;
       } else {
+        // This shouldn't happen with redirect: true, but fallback
         setError("Login failed. Please try again.");
       }
     } catch (error) {
