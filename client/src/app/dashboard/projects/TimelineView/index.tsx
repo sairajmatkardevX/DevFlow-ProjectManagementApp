@@ -14,7 +14,7 @@ type Props = {
 
 type ViewMode = 'day' | 'week' | 'month';
 
-const Timeline = ({ id, setIsModalNewTaskOpen, refreshTrigger, userRole }: Props) => {
+const TimelineView = ({ id, setIsModalNewTaskOpen, refreshTrigger, userRole }: Props) => {
   const {
     data: tasks,
     error,
@@ -24,21 +24,23 @@ const Timeline = ({ id, setIsModalNewTaskOpen, refreshTrigger, userRole }: Props
 
   const [viewMode, setViewMode] = useState<ViewMode>('week');
 
-  const ganttTasks = useMemo(() => {
+  // Single useMemo for all filtering - no duplicate filtering
+  const tasksForCurrentView = useMemo(() => {
     if (!tasks || !Array.isArray(tasks)) return [];
 
-    const validTasks = tasks
+    return tasks
       .filter(task => {
         if (!task.startDate || !task.dueDate) return false;
         
-        const startDate = new Date(task.startDate);
-        const dueDate = new Date(task.dueDate);
+        const startDate = new Date(task.startDate as string);
+        const dueDate = new Date(task.dueDate as string);
         
         const isValidStart = !isNaN(startDate.getTime());
         const isValidDue = !isNaN(dueDate.getTime());
         
         if (!isValidStart || !isValidDue) return false;
 
+        // Apply view mode filtering here
         if (viewMode === 'day') {
           const diffTime = Math.abs(dueDate.getTime() - startDate.getTime());
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -55,10 +57,6 @@ const Timeline = ({ id, setIsModalNewTaskOpen, refreshTrigger, userRole }: Props
           return null;
         }
 
-        if (viewMode === 'day' && dueDate <= startDate) {
-          return null;
-        }
-
         return {
           id: `Task-${task.id}`,
           name: task.title || 'Untitled Task',
@@ -68,15 +66,13 @@ const Timeline = ({ id, setIsModalNewTaskOpen, refreshTrigger, userRole }: Props
         };
       })
       .filter(Boolean);
-
-    return validTasks;
   }, [tasks, viewMode, refreshTrigger]);
 
   const handleViewModeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newViewMode = event.target.value as ViewMode;
     
     if (newViewMode === 'day') {
-      const dayViewTasks = ganttTasks.filter(task => {
+      const dayViewTasks = tasksForCurrentView.filter(task => {
         const startDate = new Date(task.start);
         const dueDate = new Date(task.end);
         const diffTime = Math.abs(dueDate.getTime() - startDate.getTime());
@@ -108,17 +104,7 @@ const Timeline = ({ id, setIsModalNewTaskOpen, refreshTrigger, userRole }: Props
     );
   }
 
-  const tasksForCurrentView = ganttTasks.filter(task => {
-    if (viewMode === 'day') {
-      const startDate = new Date(task.start);
-      const dueDate = new Date(task.end);
-      const diffTime = Math.abs(dueDate.getTime() - startDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays >= 1;
-    }
-    return true;
-  });
-
+  // Now just use tasksForCurrentView directly - no duplicate filtering
   if (tasksForCurrentView.length === 0) {
     return (
       <div className="px-4 xl:px-6">
@@ -143,7 +129,6 @@ const Timeline = ({ id, setIsModalNewTaskOpen, refreshTrigger, userRole }: Props
               <option value="month">Month View</option>
             </select>
 
-           
             {userRole === 'admin' && (
               <button
                 className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition-colors"
@@ -204,7 +189,6 @@ const Timeline = ({ id, setIsModalNewTaskOpen, refreshTrigger, userRole }: Props
             <option value="month">Month View</option>
           </select>
 
-         
           {userRole === 'admin' && (
             <button
               className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition-colors"
@@ -228,4 +212,4 @@ const Timeline = ({ id, setIsModalNewTaskOpen, refreshTrigger, userRole }: Props
   );
 };
 
-export default Timeline;
+export default TimelineView;
