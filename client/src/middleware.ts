@@ -1,3 +1,4 @@
+// middleware.ts
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
@@ -6,17 +7,18 @@ export default withAuth(
     const token = req.nextauth.token;
     const pathname = req.nextUrl.pathname;
 
-    // Debug logs (will show in Vercel logs)
+    // Debug logs
     console.log("🔍 Middleware Check:");
     console.log("  - Path:", pathname);
     console.log("  - Token exists:", !!token);
     console.log("  - Token role:", token?.role);
-    console.log("  - Token id:", token?.id);
 
-    // If no token, redirect to login
+    // If no token, redirect to login with callbackUrl
     if (!token) {
       console.log("❌ No token - redirecting to login");
-      return NextResponse.redirect(new URL("/auth/login", req.url));
+      const loginUrl = new URL("/auth/login", req.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
     }
 
     // Restrict admin routes
@@ -30,9 +32,18 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => {
-        console.log("📋 Authorized callback - Token exists:", !!token);
-        return !!token;
+      authorized: ({ token, req }) => {
+        // Only protect dashboard routes
+        const isDashboardRoute = req.nextUrl.pathname.startsWith("/dashboard");
+        console.log("📋 Authorized check:", { 
+          path: req.nextUrl.pathname, 
+          isDashboardRoute,
+          hasToken: !!token 
+        });
+        
+        // If it's a dashboard route, require auth
+        // If it's not a dashboard route, allow access
+        return !isDashboardRoute || !!token;
       },
     },
   }

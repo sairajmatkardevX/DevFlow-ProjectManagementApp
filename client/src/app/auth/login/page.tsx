@@ -27,11 +27,14 @@ export default function LoginPage() {
         redirect: false,
       });
 
+      console.log("Login result:", result);
+
       if (result?.error) {
         setError("Invalid email or password");
         setPassword("");
       } else if (result?.ok) {
-        // Redirect to the intended destination
+        console.log("✅ Login successful, redirecting to:", callbackUrl);
+        // Use hard redirect to ensure complete refresh
         window.location.href = callbackUrl;
       } else {
         setError("Login failed. Please try again.");
