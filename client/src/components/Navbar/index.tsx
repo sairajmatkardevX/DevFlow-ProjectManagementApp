@@ -17,27 +17,11 @@ const Navbar = () => {
   const isSidebarCollapsed = useAppSelector(state => state.global.isSidebarCollapsed);
   const { theme, setTheme } = useTheme();
   const { data: session, status } = useSession();
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Critical: Only run client-side effects after mount
+  // Simple mount effect only
   useEffect(() => {
     setMounted(true);
-    
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    
-    checkMobile();
-    handleScroll();
-    
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("resize", checkMobile);
-    
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", checkMobile);
-    };
   }, []);
 
   const handleLogout = async () => {
@@ -73,23 +57,18 @@ const Navbar = () => {
                      'U';
   const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'User';
   const userRole = session?.user?.role || 'Member';
-
-  // Safe to use theme and window properties now
   const currentTheme = theme || 'light';
 
   return (
     <div className={cn(
-      "flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:px-6 py-3 border-b sticky top-0 z-30 transition-all duration-200",
-      isScrolled && "shadow-sm border-border/50"
+      "flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:px-6 py-3 border-b sticky top-0 z-30"
     )}>
       {/* Left Section */}
       <div className="flex items-center gap-4 sm:gap-6">
         <div className="flex items-center gap-2 sm:gap-3">
-          {(isMobile || isSidebarCollapsed) && (
-            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8 sm:h-9 sm:w-9">
-              <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-          )}
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="h-8 w-8 sm:h-9 sm:w-9">
+            <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+          </Button>
           <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
               <Workflow className="h-4 w-4 text-white" />
