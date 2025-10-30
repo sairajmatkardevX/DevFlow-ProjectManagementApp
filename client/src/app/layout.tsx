@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import "../app/SessionProvider" 
 import SessionProvider from "./SessionProvider";
 import StoreProvider from "./redux";
 import { ThemeProvider } from "@/components/theme-provider";
