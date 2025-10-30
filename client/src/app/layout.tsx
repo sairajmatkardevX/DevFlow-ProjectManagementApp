@@ -5,6 +5,7 @@ import SessionProvider from "./SessionProvider";
 import StoreProvider from "./redux";
 import { ThemeProvider } from "@/components/theme-provider";
 
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -28,13 +29,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SessionProvider>
-            <StoreProvider>
-              {children}
-            </StoreProvider>
-          </SessionProvider>
-        </ThemeProvider>
+        
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <SessionProvider>
+              <StoreProvider>
+                {children}
+              </StoreProvider>
+            </SessionProvider>
+          </ThemeProvider>
+      
       </body>
     </html>
   );
