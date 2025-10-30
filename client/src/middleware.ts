@@ -7,23 +7,16 @@ export default withAuth(
     const token = req.nextauth.token;
     const pathname = req.nextUrl.pathname;
 
-    // Debug logs
-    console.log("🔍 Middleware Check:");
-    console.log("  - Path:", pathname);
-    console.log("  - Token exists:", !!token);
-    console.log("  - Token role:", token?.role);
-
-    // If no token, redirect to login with callbackUrl
-    if (!token) {
-      console.log("❌ No token - redirecting to login");
-      const loginUrl = new URL("/auth/login", req.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+    console.log("🔍 Middleware:", {
+      path: pathname,
+      hasToken: !!token,
+      email: token?.email || "none",
+      role: token?.role || "none"
+    });
 
     // Restrict admin routes
     if (pathname.startsWith("/dashboard/admin") && token?.role !== "admin") {
-      console.log("⚠️ Non-admin trying to access admin route");
+      console.log("⚠️ Non-admin blocked from admin route");
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
@@ -32,23 +25,37 @@ export default withAuth(
   },
   {
     callbacks: {
+      // CRITICAL FIX: This determines if request should even reach middleware
       authorized: ({ token, req }) => {
-        // Only protect dashboard routes
-        const isDashboardRoute = req.nextUrl.pathname.startsWith("/dashboard");
-        console.log("📋 Authorized check:", { 
-          path: req.nextUrl.pathname, 
-          isDashboardRoute,
-          hasToken: !!token 
-        });
+        const pathname = req.nextUrl.pathname;
         
-        // If it's a dashboard route, require auth
-        // If it's not a dashboard route, allow access
-        return !isDashboardRoute || !!token;
+        // Allow public routes (home, auth pages)
+        if (pathname === "/" || pathname.startsWith("/auth/")) {
+          return true;
+        }
+        
+        // For dashboard routes, require authentication
+        if (pathname.startsWith("/dashboard")) {
+          const hasToken = !!token;
+          console.log("🔐 Auth check for dashboard:", { hasToken, email: token?.email });
+          return hasToken;
+        }
+        
+        // Allow all other routes
+        return true;
       },
+    },
+    pages: {
+      signIn: "/auth/login",
     },
   }
 );
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  // Protect dashboard and handle redirects for home/auth
+  matcher: [
+    "/",
+    "/dashboard/:path*",
+    "/auth/:path*",
+  ],
 };
