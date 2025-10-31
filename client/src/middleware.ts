@@ -1,65 +1,52 @@
-import { getToken } from "next-auth/jwt";
+import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token;
+    const pathname = req.nextUrl.pathname;
 
-  // Read the JWT session token created by NextAuth
-  // Use __Secure prefix for production (HTTPS on Vercel)
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: true, // Vercel always uses HTTPS
-    cookieName: "__Secure-next-auth.session-token", // Match the actual cookie name
-  });
+    console.log("🛡️ Middleware Check:", {
+      path: pathname,
+      hasToken: !!token,
+      email: token?.email || "no-email",
+      role: token?.role || "no-role",
+    });
 
-  console.log("🛡️ Middleware Check:", {
-    path: pathname,
-    hasToken: !!token,
-    email: token?.email || "no-email",
-    role: token?.role || "no-role",
-    cookies: request.cookies.getAll().map(c => c.name), // Log cookie names
-  });
+    // If authenticated and trying to access auth pages, redirect to dashboard
+    if (pathname.startsWith("/auth/") && token) {
+      console.log("✅ Already logged in - redirecting to dashboard");
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
 
-  // 🚪 Public routes (no auth needed)
-  const isPublicRoute = pathname === "/" || pathname.startsWith("/auth/");
-  
-  // 🔐 Protected routes
-  const isProtectedRoute = pathname.startsWith("/dashboard");
+    // If not authenticated and trying to access protected routes
+    if (pathname.startsWith("/dashboard") && !token) {
+      console.log("🔒 No token - redirecting to login");
+      return NextResponse.redirect(new URL("/auth/login?callbackUrl=" + pathname, req.url));
+    }
 
-  // If user is authenticated and tries to access auth pages, redirect to dashboard
-  if (isPublicRoute && token && pathname.startsWith("/auth/")) {
-    console.log("✅ Already logged in - redirecting to dashboard");
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    // Role-based access control
+    if (pathname.startsWith("/dashboard/admin") && token?.role !== "admin") {
+      console.log("⛔ Admin access denied");
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    console.log("✅ Access granted");
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: () => true, // Let our middleware function handle authorization
+    },
+    pages: {
+      signIn: "/auth/login",
+    },
   }
+);
 
-  // If user is not authenticated and tries to access protected routes
-  if (isProtectedRoute && !token) {
-    console.log("🔒 No token - redirecting to login");
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // 🧭 Role-based access control (optional)
-  if (pathname.startsWith("/dashboard/admin") && token?.role !== "admin") {
-    console.log("⛔ Admin access denied - redirecting to dashboard");
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  if (isProtectedRoute && token) {
-    console.log("✅ Dashboard access granted");
-  }
-
-  return NextResponse.next();
-}
-
-// ✅ Run middleware on both auth and protected routes
 export const config = {
   matcher: [
     "/dashboard/:path*",
     "/auth/:path*",
-    // Add other protected routes here
   ],
 };

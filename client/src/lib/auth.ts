@@ -14,22 +14,6 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
-  // ✅ Cookie configuration for Vercel
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true, // Required for HTTPS (Vercel uses HTTPS)
-      },
-    },
-  },
-
-  // ✅ Use secure cookies in production
-  useSecureCookies: true,
-
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -110,6 +94,21 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/auth/login",
     error: "/auth/login",
+  },
+
+  // ✅ Explicitly set cookies for Vercel
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' 
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
 
   secret: process.env.NEXTAUTH_SECRET,
