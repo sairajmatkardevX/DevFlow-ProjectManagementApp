@@ -24,7 +24,7 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        redirect: true,
       });
 
       console.log("Login result:", result);
@@ -32,10 +32,6 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password");
         setPassword("");
-      } else if (result?.ok) {
-        console.log("✅ Login successful, redirecting to:", callbackUrl);
-        // Use hard redirect to ensure complete refresh
-        window.location.href = callbackUrl;
       } else {
         setError("Login failed. Please try again.");
       }

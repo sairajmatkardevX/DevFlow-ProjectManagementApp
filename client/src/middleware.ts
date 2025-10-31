@@ -1,58 +1,51 @@
-// middleware.ts
-import { withAuth } from "next-auth/middleware";
+import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const pathname = req.nextUrl.pathname;
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  
+  // Get token using getToken (more reliable for JWT)
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
-    console.log("🔍 Middleware:", {
-      path: pathname,
-      hasToken: !!token,
-      email: token?.email || "none",
-      role: token?.role || "none"
-    });
+  console.log("🛡️ Middleware Check:", {
+    path: pathname,
+    hasToken: !!token,
+    email: token?.email || "no-email",
+    role: token?.role || "no-role"
+  });
 
-    // Restrict admin routes
-    if (pathname.startsWith("/dashboard/admin") && token?.role !== "admin") {
-      console.log("⚠️ Non-admin blocked from admin route");
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+  // Public routes - always allow
+  if (pathname === "/" || pathname.startsWith("/auth/")) {
+    return NextResponse.next();
+  }
+
+  // Protected dashboard routes
+  if (pathname.startsWith("/dashboard")) {
+    if (!token) {
+      console.log("🔒 No token - redirecting to login");
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
     }
 
-    console.log("✅ Access granted");
+    // Admin route protection
+    if (pathname.startsWith("/dashboard/admin") && token.role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    console.log("✅ Dashboard access granted");
     return NextResponse.next();
-  },
-  {
-    callbacks: {
-      // CRITICAL FIX: This determines if request should even reach middleware
-      authorized: ({ token, req }) => {
-        const pathname = req.nextUrl.pathname;
-        
-        // Allow public routes (home, auth pages)
-        if (pathname === "/" || pathname.startsWith("/auth/")) {
-          return true;
-        }
-        
-        // For dashboard routes, require authentication
-        if (pathname.startsWith("/dashboard")) {
-          const hasToken = !!token;
-          console.log("🔐 Auth check for dashboard:", { hasToken, email: token?.email });
-          return hasToken;
-        }
-        
-        // Allow all other routes
-        return true;
-      },
-    },
-    pages: {
-      signIn: "/auth/login",
-    },
   }
-);
+
+  // Allow all other routes
+  return NextResponse.next();
+}
 
 export const config = {
-  // Protect dashboard and handle redirects for home/auth
   matcher: [
     "/",
     "/dashboard/:path*",
