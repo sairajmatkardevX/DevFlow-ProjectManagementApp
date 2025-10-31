@@ -6,10 +6,12 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Read the JWT session token created by NextAuth
+  // Use __Secure prefix for production (HTTPS on Vercel)
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: process.env.NODE_ENV === "production", // Important for Vercel
+    secureCookie: true, // Vercel always uses HTTPS
+    cookieName: "__Secure-next-auth.session-token", // Match the actual cookie name
   });
 
   console.log("🛡️ Middleware Check:", {
