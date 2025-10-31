@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,23 +22,26 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Use redirect: true and include callbackUrl - let NextAuth handle everything
       const result = await signIn("credentials", {
-        email,
+        email: email.toLowerCase().trim(),
         password,
-        redirect: true,
-        callbackUrl: callbackUrl,
+        redirect: false, // Keep this false to handle errors
       });
 
-      // If we get here, redirect didn't happen automatically
-      // This means there was an error
+      console.log("🔐 Login result:", result);
+
       if (result?.error) {
+        console.error("❌ Login failed:", result.error);
         setError("Invalid email or password");
         setPassword("");
+      } else if (result?.ok) {
+        console.log("✅ Login successful, redirecting to:", callbackUrl);
+        // Use router.push for client-side navigation or router.replace to avoid back button
+        router.push(callbackUrl);
+        // Alternative: window.location.href = callbackUrl; (full page reload)
       }
-      // No need to handle success case - NextAuth will redirect automatically
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("💥 Login error:", error);
       setError("An unexpected error occurred");
       setPassword("");
     } finally {

@@ -7,11 +7,13 @@ import { Adapter } from "next-auth/adapters";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
+
+  // ✅ FIXED: Use JWT strategy for Vercel compatibility
   session: {
-    strategy: "jwt",
+    strategy: "jwt", // Changed from "database"
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  // REMOVED custom cookies config - let NextAuth handle it automatically
+
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -20,95 +22,72 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        try {
-          // Validate input
-          if (!credentials?.email || !credentials?.password) {
-            console.log("❌ Missing credentials");
-            return null;
-          }
-
-          // Find user
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email.toLowerCase().trim() },
-          });
-
-          if (!user) {
-            console.log("❌ User not found:", credentials.email);
-            return null;
-          }
-
-          // Check if user has password (for OAuth users)
-          if (!user.password) {
-            console.log("❌ No password set for user:", user.userId);
-            return null;
-          }
-
-          // Verify password
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-
-          if (!isPasswordValid) {
-            console.log("❌ Invalid password for user:", user.email);
-            return null;
-          }
-
-          return {
-            id: user.userId.toString(),
-            email: user.email,
-            name: user.username || user.email.split("@")[0],
-            role: user.role || "user",
-            image: user.profilePictureUrl || "/p1.jpeg", // Default image
-          };
-        } catch (error) {
-          console.error("💥 Auth error:", error);
-          return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password required");
         }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email.toLowerCase().trim() },
+        });
+
+        if (!user) {
+          throw new Error("No user found with this email");
+        }
+
+        const valid = await bcrypt.compare(credentials.password, user.password);
+        if (!valid) {
+          throw new Error("Invalid password");
+        }
+
+        return {
+          id: user.userId.toString(),
+          email: user.email,
+          name: user.username || user.email.split("@")[0],
+          role: user.role || "user",
+          image: user.profilePictureUrl || "/p1.jpeg",
+        };
       },
     }),
   ],
+
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       // Initial sign in
       if (user) {
         token.id = user.id;
-        token.role = user.role;
-        token.name = user.name;
         token.email = user.email;
+        token.name = user.name;
+        token.role = user.role;
         token.picture = user.image;
         console.log("🔑 JWT created for:", user.email);
       }
 
-      // Update session if needed
+      // Handle session updates (e.g., profile changes)
       if (trigger === "update" && session) {
         token = { ...token, ...session };
       }
 
       return token;
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.name = token.name as string;
-        session.user.email = token.email as string;
-        session.user.image = token.picture as string;
-      }
 
-      console.log("📋 Session created for:", session.user.email);
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        session.user.role = token.role as string;
+        session.user.image = token.picture as string;
+        console.log("📋 Session created for:", session.user.email);
+      }
       return session;
     },
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      else if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
-    },
   },
+
   pages: {
     signIn: "/auth/login",
-    signUp: "/auth/register",
+    error: "/auth/login",
   },
+
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
 };
