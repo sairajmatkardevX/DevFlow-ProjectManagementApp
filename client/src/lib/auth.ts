@@ -19,10 +19,12 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure:true,
+        domain:".vercel.app",
       },
     },
   },
+  useSecureCookies:process.env.NODE_ENV === "production",
   providers: [
     CredentialsProvider({
       name: "credentials",
