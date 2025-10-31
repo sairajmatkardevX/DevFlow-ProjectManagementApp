@@ -14,6 +14,22 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
+  // ✅ Cookie configuration for Vercel
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true, // Required for HTTPS (Vercel uses HTTPS)
+      },
+    },
+  },
+
+  // ✅ Use secure cookies in production
+  useSecureCookies: true,
+
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -80,6 +96,14 @@ export const authOptions: NextAuthOptions = {
         console.log("📋 Session created for:", session.user.email);
       }
       return session;
+    },
+
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
 
