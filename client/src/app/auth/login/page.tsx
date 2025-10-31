@@ -21,20 +21,21 @@ export default function LoginPage() {
     setError("");
 
     try {
+      // Use redirect: true and include callbackUrl - let NextAuth handle everything
       const result = await signIn("credentials", {
         email,
         password,
         redirect: true,
+        callbackUrl: callbackUrl,
       });
 
-      console.log("Login result:", result);
-
+      // If we get here, redirect didn't happen automatically
+      // This means there was an error
       if (result?.error) {
         setError("Invalid email or password");
         setPassword("");
-      } else {
-        setError("Login failed. Please try again.");
       }
+      // No need to handle success case - NextAuth will redirect automatically
     } catch (error) {
       console.error("Login error:", error);
       setError("An unexpected error occurred");

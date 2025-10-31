@@ -9,22 +9,9 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  // ADD THIS COOKIES CONFIGURATION:
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure:true,
-        domain:".vercel.app",
-      },
-    },
-  },
-  useSecureCookies:process.env.NODE_ENV === "production",
+  // REMOVED custom cookies config - let NextAuth handle it automatically
   providers: [
     CredentialsProvider({
       name: "credentials",
