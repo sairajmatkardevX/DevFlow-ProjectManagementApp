@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { api } from "@/state/api";
+import Image from "next/image";
 
 const Navbar = () => {
   const dispatch = useAppDispatch();
@@ -19,7 +20,6 @@ const Navbar = () => {
   const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
 
-  // Simple mount effect only
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -37,7 +37,6 @@ const Navbar = () => {
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const toggleSidebar = () => dispatch(setIsSidebarCollapsed(!isSidebarCollapsed));
 
-  // Show loading state until client-side mounted AND session is loaded
   if (!mounted || status === "loading") {
     return (
       <div className="flex items-center justify-between bg-background/95 backdrop-blur px-4 sm:px-6 py-3 border-b">
@@ -52,11 +51,10 @@ const Navbar = () => {
     );
   }
 
-  const userInitial = session?.user?.name?.charAt(0)?.toUpperCase() || 
-                     session?.user?.email?.charAt(0)?.toUpperCase() || 
-                     'U';
+  const userImage = session?.user?.image;
   const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'User';
   const userRole = session?.user?.role || 'Member';
+  const userInitial = userName.charAt(0).toUpperCase();
   const currentTheme = theme || 'light';
 
   return (
@@ -92,9 +90,26 @@ const Navbar = () => {
         </Button>
 
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm">
-            {userInitial}
-          </div>
+          {/* Profile Picture - Shows image if available, otherwise fallback to initial */}
+          {userImage ? (
+            <div className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 border border-border">
+              <Image
+                src={userImage}
+                alt={userName}
+                width={32}
+                height={32}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  // If image fails to load, show fallback
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          ) : (
+            <div className="h-8 w-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm flex-shrink-0">
+              {userInitial}
+            </div>
+          )}
           <div className="hidden sm:block">
             <p className="text-sm font-medium text-foreground">{userName}</p>
             <p className="text-xs text-muted-foreground">{userRole}</p>
