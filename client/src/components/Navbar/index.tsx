@@ -19,6 +19,7 @@ const Navbar = () => {
   const { theme, setTheme } = useTheme();
   const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -36,6 +37,10 @@ const Navbar = () => {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const toggleSidebar = () => dispatch(setIsSidebarCollapsed(!isSidebarCollapsed));
+
+  useEffect(() => {
+    setImageError(false);
+  }, [session?.user?.image]);
 
   if (!mounted || status === "loading") {
     return (
@@ -90,8 +95,7 @@ const Navbar = () => {
         </Button>
 
         <div className="flex items-center gap-2">
-          {/* Profile Picture - Shows image if available, otherwise fallback to initial */}
-          {userImage ? (
+          {userImage && !imageError ? (
             <div className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 border border-border">
               <Image
                 src={userImage}
@@ -99,10 +103,8 @@ const Navbar = () => {
                 width={32}
                 height={32}
                 className="h-full w-full object-cover"
-                onError={(e) => {
-                  // If image fails to load, show fallback
-                  e.currentTarget.style.display = 'none';
-                }}
+                onError={() => setImageError(true)}
+                onLoad={() => console.log("✅ Profile image loaded")}
               />
             </div>
           ) : (
