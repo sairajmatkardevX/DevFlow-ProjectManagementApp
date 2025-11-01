@@ -22,16 +22,15 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Let NextAuth handle the redirect automatically
+      
       const result = await signIn("credentials", {
         email: email.toLowerCase().trim(),
         password,
         callbackUrl: callbackUrl,
-        redirect: true, // Let NextAuth handle the redirect
+        redirect: true, 
       });
 
-      // This code won't execute if redirect: true succeeds
-      // It only runs if there's an error
+
       if (result?.error) {
         console.error("❌ Login failed:", result.error);
         setError("Invalid email or password");

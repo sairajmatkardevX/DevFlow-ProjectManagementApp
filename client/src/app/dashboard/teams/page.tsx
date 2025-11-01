@@ -36,7 +36,9 @@ import {
   UserPlus,
   UserMinus,
   AlertTriangle,
-  Eye
+  Eye,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 
 // Team Statistics Cards - ONLY FOR ADMINS
@@ -438,39 +440,66 @@ const Teams = () => {
   const isAdmin = session?.user?.role === 'admin';
 
   const canDeleteTeam = (team: any) => {
-  if (!team) return false;
-  
-  const memberCount = team._count?.members || 0;
-  const projectCount = team._count?.projects || 0;
-  
-  return memberCount === 0 && projectCount === 0;
-};
+    if (!team) return false;
+    
+    const memberCount = team._count?.members || 0;
+    const projectCount = team._count?.projects || 0;
+    
+    return memberCount === 0 && projectCount === 0;
+  };
+
+  // Enhanced Toast Functions
+  const showSuccessToast = (title: string, description: string) => {
+    toast({
+      title: (
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <span>{title}</span>
+        </div>
+      ),
+      description,
+      className: "border-green-200 bg-green-50 text-green-900",
+    });
+  };
+
+  const showErrorToast = (title: string, description: string) => {
+    toast({
+      title: (
+        <div className="flex items-center gap-2">
+          <XCircle className="h-5 w-5 text-red-600" />
+          <span>{title}</span>
+        </div>
+      ),
+      description,
+      variant: "destructive",
+    });
+  };
 
   // Handlers
   const handleFormSubmit = async (formData: any) => {
     try {
       if (selectedTeam) {
         await updateTeam({ id: selectedTeam.id, data: formData }).unwrap();
-        toast({
-          title: "Success",
-          description: "Team updated successfully",
-        });
+        showSuccessToast(
+          "Team Updated", 
+          `${formData.teamName} has been updated successfully.`
+        );
       } else {
         await createTeam(formData).unwrap();
-        toast({
-          title: "Success",
-          description: "Team created successfully",
-        });
+        showSuccessToast(
+          "Team Created", 
+          `${formData.teamName} has been created successfully.`
+        );
       }
       setShowForm(false);
       setSelectedTeam(null);
       refetchTeams();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.data?.message || 'Error saving team',
-        variant: "destructive",
-      });
+      console.error('Team operation error:', error);
+      showErrorToast(
+        "Operation Failed",
+        error?.data?.message || `Failed to ${selectedTeam ? 'update' : 'create'} team. Please try again.`
+      );
     }
   };
 
@@ -478,19 +507,19 @@ const Teams = () => {
     if (!selectedTeam) return;
     try {
       await deleteTeam(selectedTeam.id).unwrap();
-      toast({
-        title: "Success",
-        description: "Team deleted successfully",
-      });
+      showSuccessToast(
+        "Team Deleted",
+        `${selectedTeam.teamName} has been removed from the system.`
+      );
       setDeleteConfirm(false);
       setSelectedTeam(null);
       refetchTeams();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.data?.message || 'Error deleting team',
-        variant: "destructive",
-      });
+      console.error('Delete team error:', error);
+      showErrorToast(
+        "Delete Failed",
+        error?.data?.message || 'Failed to delete team. Please try again.'
+      );
     }
   };
 
@@ -498,17 +527,20 @@ const Teams = () => {
     if (!selectedTeam) return;
     try {
       await removeTeamMember({ teamId: selectedTeam.id, userId }).unwrap();
-      toast({
-        title: "Success",
-        description: "Member removed successfully",
-      });
+      
+      // Find the user to show their name in the toast
+      const removedUser = users?.find(user => user.userId === userId);
+      showSuccessToast(
+        "Member Removed",
+        `${removedUser?.username || 'User'} has been removed from ${selectedTeam.teamName}.`
+      );
       refetchTeams();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.data?.message || 'Error removing member',
-        variant: "destructive",
-      });
+      console.error('Remove member error:', error);
+      showErrorToast(
+        "Remove Failed",
+        error?.data?.message || 'Failed to remove team member. Please try again.'
+      );
     }
   };
 
@@ -516,17 +548,20 @@ const Teams = () => {
     if (!selectedTeam) return;
     try {
       await addTeamMember({ teamId: selectedTeam.id, userId }).unwrap();
-      toast({
-        title: "Success",
-        description: "Member added successfully",
-      });
+      
+      // Find the user to show their name in the toast
+      const addedUser = users?.find(user => user.userId === userId);
+      showSuccessToast(
+        "Member Added",
+        `${addedUser?.username || 'User'} has been added to ${selectedTeam.teamName}.`
+      );
       refetchTeams();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.data?.message || 'Error adding member',
-        variant: "destructive",
-      });
+      console.error('Add member error:', error);
+      showErrorToast(
+        "Add Failed",
+        error?.data?.message || 'Failed to add team member. Please try again.'
+      );
     }
   };
 
@@ -539,9 +574,13 @@ const Teams = () => {
       <div className="p-6">
         <Header name="Teams Management" />
         <Alert variant="destructive">
-          <AlertDescription>Error loading teams</AlertDescription>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Error loading teams. Please check your connection and try again.
+          </AlertDescription>
         </Alert>
         <Button onClick={() => refetchTeams()} variant="outline" className="mt-4">
+          <Loader2 className="mr-2 h-4 w-4" />
           Retry
         </Button>
       </div>

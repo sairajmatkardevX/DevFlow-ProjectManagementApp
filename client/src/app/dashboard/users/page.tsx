@@ -31,7 +31,9 @@ import {
   Shield,
   Loader2,
   Image,
-  AlertTriangle
+  AlertTriangle,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 
 // Available images from public folder
@@ -70,7 +72,7 @@ const UserForm = ({
     email: user?.email || '',
     role: user?.role || 'user', 
     profilePictureUrl: user?.profilePictureUrl || 'p1.jpeg',
-     teamId: user?.teamId ? user.teamId.toString() : 'no-team',
+    teamId: user?.teamId ? user.teamId.toString() : 'no-team',
   });
 
   const [errors, setErrors] = useState({ username: '', email: '' });
@@ -103,7 +105,7 @@ const UserForm = ({
         email: formData.email,
         role: formData.role,
         profilePictureUrl: formData.profilePictureUrl,
-       teamId: formData.teamId === 'no-team' ? null : Number(formData.teamId),
+        teamId: formData.teamId === 'no-team' ? null : Number(formData.teamId),
       };
       onSubmit(submitData);
     }
@@ -163,7 +165,7 @@ const UserForm = ({
           <SelectContent>
             <SelectItem value="no-team">No team</SelectItem>
             {teams.map((team) => (
-               <SelectItem key={team.id} value={team.id.toString()}>
+              <SelectItem key={team.id} value={team.id.toString()}>
                 {team.teamName}
               </SelectItem>
             ))}
@@ -267,30 +269,56 @@ const Users = () => {
 
   const isAdmin = session?.user?.role === 'admin';
 
+  const showSuccessToast = (title: string, description: string) => {
+    toast({
+      title: (
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <span>{title}</span>
+        </div>
+      ),
+      description,
+      className: "border-green-200 bg-green-50 text-green-900",
+    });
+  };
+
+  const showErrorToast = (title: string, description: string) => {
+    toast({
+      title: (
+        <div className="flex items-center gap-2">
+          <XCircle className="h-5 w-5 text-red-600" />
+          <span>{title}</span>
+        </div>
+      ),
+      description,
+      variant: "destructive",
+    });
+  };
+
   const handleFormSubmit = async (formData: any) => {
     try {
       if (selectedUser) {
         await updateUser({ id: selectedUser.userId, data: formData }).unwrap();
-        toast({
-          title: "Success",
-          description: "User updated successfully",
-        });
+        showSuccessToast(
+          "User Updated", 
+          `${formData.username} has been updated successfully.`
+        );
       } else {
         await createUser(formData).unwrap();
-        toast({
-          title: "Success",
-          description: "User created successfully",
-        });
+        showSuccessToast(
+          "User Created", 
+          `${formData.username} has been added to the system.`
+        );
       }
       setShowForm(false);
       setSelectedUser(null);
       refetch();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.data?.message || 'Error saving user',
-        variant: "destructive",
-      });
+      console.error('User operation error:', error);
+      showErrorToast(
+        "Operation Failed",
+        error?.data?.message || `Failed to ${selectedUser ? 'update' : 'create'} user. Please try again.`
+      );
     }
   };
 
@@ -298,19 +326,19 @@ const Users = () => {
     if (!selectedUser) return;
     try {
       await deleteUser(selectedUser.userId).unwrap();
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-      });
+      showSuccessToast(
+        "User Deleted",
+        `${selectedUser.username} has been removed from the system.`
+      );
       setDeleteConfirm(false);
       setSelectedUser(null);
       refetch();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.data?.message || 'Error deleting user',
-        variant: "destructive",
-      });
+      console.error('Delete error:', error);
+      showErrorToast(
+        "Delete Failed",
+        error?.data?.message || 'Failed to delete user. Please try again.'
+      );
     }
   };
 
@@ -335,9 +363,13 @@ const Users = () => {
       <div className="p-6">
         <Header name="Users Management" />
         <Alert variant="destructive">
-          <AlertDescription>Error loading users</AlertDescription>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Error loading users. Please check your connection and try again.
+          </AlertDescription>
         </Alert>
         <Button onClick={() => refetch()} variant="outline" className="mt-4">
+          <Loader2 className="mr-2 h-4 w-4" />
           Retry
         </Button>
       </div>
@@ -346,7 +378,11 @@ const Users = () => {
 
   return (
     <div className="p-6">
-      <Header name="Users Management" description="Manage system users and their permissions" className="mb-8" />
+      <Header 
+        name="Users Management" 
+        description="Manage system users and their permissions" 
+        className="mb-8" 
+      />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

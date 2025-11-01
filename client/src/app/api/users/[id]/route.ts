@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 interface RouteParams {
   params: { id: string }
 }
+
 export const dynamic = 'force-dynamic';
+
 // GET /api/users/[id]
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    // Add authentication
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
       where: { userId: Number(params.id) },
       select: {
@@ -21,6 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (!user) return NextResponse.json({ message: 'User not found' }, { status: 404 })
     return NextResponse.json(user)
   } catch (error: any) {
+    console.error(`GET /api/users/${params.id} error:`, error);
     return NextResponse.json({ message: error.message }, { status: 500 })
   }
 }
@@ -28,6 +43,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT /api/users/[id]
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // Add authentication
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { username, email, role, profilePictureUrl, teamId } = await request.json()
     
     const updatedUser = await prisma.user.update({
@@ -42,6 +67,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(updatedUser)
   } catch (error: any) {
+    console.error(`PUT /api/users/${params.id} error:`, error);
     return NextResponse.json({ message: error.message }, { status: 500 })
   }
 }
@@ -49,9 +75,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/users/[id]
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // Add authentication
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     await prisma.user.delete({ where: { userId: Number(params.id) } })
     return NextResponse.json({ message: 'User deleted' })
   } catch (error: any) {
+    console.error(`DELETE /api/users/${params.id} error:`, error);
     return NextResponse.json({ message: error.message }, { status: 500 })
   }
 }

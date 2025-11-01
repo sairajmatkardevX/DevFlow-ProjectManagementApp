@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
 export const dynamic = 'force-dynamic';
+
 // GET /api/users - Get all users
 export async function GET(request: NextRequest) {
   try {
+    // Add authentication
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const users = await prisma.user.findMany({
       select: {
         userId: true,
@@ -30,6 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(users)
   } catch (error: any) {
+    console.error('GET /api/users error:', error);
     return NextResponse.json(
       { message: `Error retrieving users: ${error.message}` },
       { status: 500 }
@@ -40,7 +55,17 @@ export async function GET(request: NextRequest) {
 // POST /api/users - Create new user
 export async function POST(request: NextRequest) {
   try {
-    const { username, email, role = "USER", profilePictureUrl = "i1.jpg", teamId } = await request.json()
+    // Add authentication
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { username, email, role = "USER", profilePictureUrl = "/p1.jpeg", teamId } = await request.json()
 
     if (!username || !email) {
       return NextResponse.json(
@@ -62,7 +87,13 @@ export async function POST(request: NextRequest) {
     }
 
     const newUser = await prisma.user.create({
-      data: { username, email, role, profilePictureUrl, teamId: teamId ? Number(teamId) : null },
+      data: { 
+        username, 
+        email, 
+        role, 
+        profilePictureUrl, 
+        teamId: teamId ? Number(teamId) : null 
+      },
       select: {
         userId: true, username: true, email: true, role: true, 
         profilePictureUrl: true, teamId: true,
@@ -72,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newUser, { status: 201 })
   } catch (error: any) {
+    console.error('POST /api/users error:', error);
     return NextResponse.json(
       { message: `Error creating user: ${error.message}` },
       { status: 500 }
