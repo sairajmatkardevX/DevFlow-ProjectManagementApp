@@ -8,9 +8,8 @@ import { Adapter } from "next-auth/adapters";
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
 
-  // ✅ FIXED: Use JWT strategy for Vercel compatibility
   session: {
-    strategy: "jwt", // Changed from "database"
+    strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
@@ -51,41 +50,27 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user }) {
       // Initial sign in
       if (user) {
         token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
         token.role = user.role;
-        token.picture = user.image;
         console.log("🔑 JWT created for:", user.email);
       }
-
-      // Handle session updates (e.g., profile changes)
-      if (trigger === "update" && session) {
-        token = { ...token, ...session };
-      }
-
       return token;
     },
 
     async session({ session, token }) {
-      if (token && session.user) {
+      if (token) {
         session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.name = token.name as string;
         session.user.role = token.role as string;
-        session.user.image = token.picture as string;
         console.log("📋 Session created for:", session.user.email);
       }
       return session;
     },
 
     async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
       else if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
     },
@@ -96,21 +81,7 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/login",
   },
 
-  // ✅ Explicitly set cookies for Vercel
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === 'production' 
-        ? '__Secure-next-auth.session-token'
-        : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-  },
-
+  // Let NextAuth handle cookies automatically
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
 };
