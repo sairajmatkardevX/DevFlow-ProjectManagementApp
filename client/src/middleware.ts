@@ -20,7 +20,8 @@ export default withAuth(
     }
 
     // If not authenticated and trying to access protected routes
-    if (pathname.startsWith("/dashboard") && !token) {
+    // EXCLUDE NextAuth API routes to prevent loops
+    if (pathname.startsWith("/dashboard") && !token && !pathname.startsWith("/api/auth/")) {
       const callbackUrl = encodeURIComponent(pathname);
       return NextResponse.redirect(new URL(`/auth/login?callbackUrl=${callbackUrl}`, req.url));
     }
