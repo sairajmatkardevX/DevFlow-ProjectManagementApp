@@ -70,15 +70,16 @@ const UserForm = ({
   const [formData, setFormData] = useState({
     username: user?.username || '',
     email: user?.email || '',
+    password: '', // Add password field
     role: user?.role || 'user', 
     profilePictureUrl: user?.profilePictureUrl || 'p1.jpeg',
     teamId: user?.teamId ? user.teamId.toString() : 'no-team',
   });
 
-  const [errors, setErrors] = useState({ username: '', email: '' });
+  const [errors, setErrors] = useState({ username: '', email: '', password: '' });
 
   const validateForm = () => {
-    const newErrors = { username: '', email: '' };
+    const newErrors = { username: '', email: '', password: '' };
     let isValid = true;
 
     if (!formData.username.trim()) {
@@ -90,6 +91,11 @@ const UserForm = ({
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
+      isValid = false;
+    }
+    // Password required only for new users
+    if (!user && !formData.password.trim()) {
+      newErrors.password = 'Password is required';
       isValid = false;
     }
 
@@ -107,6 +113,12 @@ const UserForm = ({
         profilePictureUrl: formData.profilePictureUrl,
         teamId: formData.teamId === 'no-team' ? null : Number(formData.teamId),
       };
+
+      // Only include password if provided (for new users or password change)
+      if (formData.password.trim()) {
+        submitData.password = formData.password;
+      }
+
       onSubmit(submitData);
     }
   };
@@ -141,6 +153,25 @@ const UserForm = ({
           placeholder="Enter email"
         />
         {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">
+          Password {!user && '*'}
+        </Label>
+        <Input
+          id="password"
+          type="password"
+          value={formData.password}
+          onChange={(e) => handleChange('password', e.target.value)}
+          placeholder={user ? "Leave blank to keep current password" : "Enter password"}
+        />
+        {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+        {user && (
+          <p className="text-xs text-muted-foreground">
+            Leave blank to keep current password
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -298,12 +329,18 @@ const Users = () => {
   const handleFormSubmit = async (formData: any) => {
     try {
       if (selectedUser) {
-        await updateUser({ id: selectedUser.userId, data: formData }).unwrap();
+        // For updates, only include password if provided
+        const updateData = { ...formData };
+        if (!updateData.password) {
+          delete updateData.password;
+        }
+        await updateUser({ id: selectedUser.userId, data: updateData }).unwrap();
         showSuccessToast(
           "User Updated", 
           `${formData.username} has been updated successfully.`
         );
       } else {
+        // For new users, password is required
         await createUser(formData).unwrap();
         showSuccessToast(
           "User Created", 
