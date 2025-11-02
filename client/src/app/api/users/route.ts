@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/users - Get all users
 export async function GET(request: NextRequest) {
   try {
-    // Add authentication
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -55,7 +55,6 @@ export async function GET(request: NextRequest) {
 // POST /api/users - Create new user
 export async function POST(request: NextRequest) {
   try {
-    // Add authentication
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -65,11 +64,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { username, email, role = "USER", profilePictureUrl = "/p1.jpeg", teamId } = await request.json()
+    const { username, email, password, role = "user", profilePictureUrl = "/p1.jpeg", teamId } = await request.json()
 
-    if (!username || !email) {
+    if (!username || !email || !password) {
       return NextResponse.json(
-        { message: 'Username and email are required' },
+        { message: 'Username, email and password are required' },
         { status: 400 }
       )
     }
@@ -86,10 +85,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
     const newUser = await prisma.user.create({
       data: { 
         username, 
         email, 
+        password: hashedPassword,
         role, 
         profilePictureUrl, 
         teamId: teamId ? Number(teamId) : null 
