@@ -13,7 +13,7 @@ export default withAuth(
       secureCookie: process.env.NODE_ENV === "production"
     });
 
-   
+
 
     // If authenticated and trying to access auth pages, redirect to dashboard
     if (pathname.startsWith("/auth/") && token) {

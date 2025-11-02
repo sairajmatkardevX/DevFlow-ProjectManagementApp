@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { writeFile, mkdir } from "fs/promises";
@@ -13,6 +14,7 @@ export async function POST(request: NextRequest) {
     const password = formData.get("password") as string;
     const profilePicture = formData.get("profilePicture") as File | null;
 
+   
     if (!username || !email || !password) {
       return NextResponse.json(
         { error: "Username, email, and password are required" },
@@ -20,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for existing user
+    
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -32,32 +34,36 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "This email or username is already registered" },  // ✅ Generic but helpful
+        { error: "User with this email or username already exists" },
         { status: 400 }
       );
     }
 
     let profilePictureUrl = null;
 
-    // File upload handling (existing code remains same)
+    
     if (profilePicture && profilePicture.size > 0) {
       try {
+        
         const uploadsDir = path.join(process.cwd(), "public", "uploads", "profiles");
         await mkdir(uploadsDir, { recursive: true });
 
+       
         const timestamp = Date.now();
         const fileExtension = profilePicture.name.split('.').pop() || 'jpg';
         const fileName = `${username}-${timestamp}.${fileExtension}`;
         const filePath = path.join(uploadsDir, fileName);
 
+     
         const bytes = await profilePicture.arrayBuffer();
         const buffer = Buffer.from(bytes);
         await writeFile(filePath, buffer);
 
+       
         profilePictureUrl = `/uploads/profiles/${fileName}`;
       } catch (fileError) {
         console.error("File upload error:", fileError);
-        // Continue without profile picture
+        
       }
     }
 
@@ -69,8 +75,9 @@ export async function POST(request: NextRequest) {
         username,
         email,
         password: hashedPassword,
-        role: "user",
+        role: "user", 
         profilePictureUrl,
+        
       }
     });
 
