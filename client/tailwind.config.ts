@@ -16,7 +16,7 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)'
       },
       colors: {
-        // shadcn/ui CSS variables
+        
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -51,7 +51,7 @@ const config: Config = {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         
-        // Your existing custom colors
+        
         white: "#ffffff",
         gray: {
           100: "#f3f4f6",

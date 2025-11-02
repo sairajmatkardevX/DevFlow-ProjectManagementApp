@@ -14,7 +14,7 @@ import {
 } from "redux-persist";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import { useDispatch, useSelector } from "react-redux";
-import { persistStore } from 'redux-persist'; // Add this import
+import { persistStore } from 'redux-persist'; 
 
 const createNoopStorage = () => ({
   getItem: () => Promise.resolve(null),
@@ -50,7 +50,7 @@ export const store = configureStore({
     }).concat(api.middleware),
 });
 
-// Add this line to export persistor
+
 export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -9,7 +9,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "loading") return; // Still loading
+    if (status === "loading") return; 
     
     if (session) {
       router.push("/dashboard");
@@ -18,7 +18,7 @@ export default function Home() {
     }
   }, [session, status, router]);
 
-  // Show loading while checking auth
+  
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">

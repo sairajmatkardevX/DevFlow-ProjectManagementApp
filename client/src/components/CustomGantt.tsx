@@ -48,7 +48,7 @@ export const CustomGantt: React.FC<CustomGanttProps> = ({ tasks, viewMode, isRea
   const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const endOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
 
-  // ISO week: Monday as start
+  
   const startOfISOWeek = (d: Date) => {
     const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const day = date.getDay();
@@ -88,7 +88,7 @@ export const CustomGantt: React.FC<CustomGanttProps> = ({ tasks, viewMode, isRea
     const minT = new Date(Math.min(...tasks.map((t) => t.start.getTime())));
     const maxT = new Date(Math.max(...tasks.map((t) => t.end.getTime())));
 
-    // normalize range depending on viewMode
+    
     let curStart: Date;
     let finalUnitStart: Date;
     if (viewMode === "month") {
@@ -120,7 +120,7 @@ export const CustomGantt: React.FC<CustomGanttProps> = ({ tasks, viewMode, isRea
       }
     }
 
-    // compute overall range end (end of last unit)
+   
     let overallEnd: Date;
     if (viewMode === "month") {
       overallEnd = endOfMonth(unitStartDates[unitStartDates.length - 1]);
@@ -242,7 +242,7 @@ export const CustomGantt: React.FC<CustomGanttProps> = ({ tasks, viewMode, isRea
   return (
     <div className="w-full">
       <div
-        className={`overflow-x-auto rounded-md border ${isReadOnly ? 'cursor-default' : 'cursor-grab'}`} // DIFFERENT CURSOR BASED ON ROLE
+        className={`overflow-x-auto rounded-md border ${isReadOnly ? 'cursor-default' : 'cursor-grab'}`}
         style={{ borderColor: colors.border, background: colors.background }}
       >
         <div className="min-w-max" style={{ minWidth: minTotalWidth }}>

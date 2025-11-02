@@ -24,7 +24,7 @@ const Sidebar = () => {
   const dispatch = useAppDispatch();
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed);
 
-  // Simplified mount effect - remove all complex logic
+ 
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -34,7 +34,7 @@ const Sidebar = () => {
   };
 
   const closeSidebar = () => {
-    // Simple close logic
+   
     if (window.innerWidth < 768) {
       dispatch(setIsSidebarCollapsed(true));
     }
@@ -50,13 +50,13 @@ const Sidebar = () => {
     "md:static md:flex" 
   );
 
-  // Overlay for mobile
+ 
   const overlayClassNames = cn(
     "fixed inset-0 bg-background/80 backdrop-blur-sm z-30 transition-opacity duration-300 md:hidden",
     isSidebarCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
   );
 
-  // Show loading state until client-side mounted
+  
   if (!mounted) {
     return (
       <div className={cn(
@@ -344,7 +344,7 @@ const Sidebar = () => {
   );
 };
 
-// SidebarLink component remains the same as your original
+
 interface SidebarLinkProps {
   href: string;
   icon: LucideIcon;

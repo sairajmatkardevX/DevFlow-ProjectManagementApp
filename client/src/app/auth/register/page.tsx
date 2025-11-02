@@ -49,7 +49,7 @@ export default function RegisterPage() {
       formData.append("username", username);
       formData.append("email", email);
       formData.append("password", password);
-      // Role removed from client-side - handled in backend
+     
 
       const response = await fetch("/api/auth/register", {
         method: "POST",

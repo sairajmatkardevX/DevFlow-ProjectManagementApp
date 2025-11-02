@@ -13,17 +13,12 @@ export default function SessionProvider({ children, session }: Props) {
   return (
     <NextAuthSessionProvider 
       session={session}
-      // CRITICAL: Configure to prevent DELETE requests
-      refetchInterval={0} // Disable automatic refetching
-      refetchOnWindowFocus={false} // Don't refetch on window focus
-      refetchWhenOffline={false} // Don't try to refetch when offline
+      refetchInterval={0} 
+      refetchOnWindowFocus={false} 
+      refetchWhenOffline={false} 
     >
       {children}
     </NextAuthSessionProvider>
   );
 }
 
-// Usage in app/layout.tsx:
-// <SessionProvider session={session}>
-//   {children}
-// </SessionProvider>

@@ -37,7 +37,7 @@ const TaskCard = ({ task, onTaskUpdated, userRole }: Props) => {
   const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
   const [updateTaskStatus, { isLoading: isUpdatingStatus }] = useUpdateTaskStatusMutation();
 
-  // Priority configuration with type safety
+  
   const priorityConfig = {
     [Priority.Urgent]: { 
       label: "Urgent", 
