@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -11,34 +10,60 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
+
+  const validateForm = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return false;
+    }
+    
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return false;
+    }
+    
+    if (username.length < 3) {
+      setError("Username must be at least 3 characters");
+      return false;
+    }
+    
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      
       const formData = new FormData();
       formData.append("username", username);
       formData.append("email", email);
       formData.append("password", password);
-      formData.append("role", "USER");
+      // Role removed from client-side - handled in backend
 
       const response = await fetch("/api/auth/register", {
         method: "POST",
-       
         body: formData,
       });
 
       if (response.ok) {
         router.push("/auth/login?message=Registration successful! Please login with your credentials.");
       } else {
-        const error = await response.json();
-        alert(error.error || "Registration failed");
+        const errorData = await response.json();
+        setError(errorData.error || "Registration failed");
       }
     } catch (error) {
-      alert("Registration failed");
+      setError("Registration failed");
     } finally {
       setLoading(false);
     }
@@ -81,6 +106,13 @@ export default function RegisterPage() {
               Get started with your DevFlow account
             </p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
 
           {/* Form */}
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

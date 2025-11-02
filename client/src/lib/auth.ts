@@ -10,7 +10,7 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 24 * 60 * 60, // 30 days
   },
 
   providers: [
@@ -22,7 +22,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password required");
+          throw new Error("Invalid credentials");
         }
 
         const user = await prisma.user.findUnique({
@@ -30,12 +30,12 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
-          throw new Error("No user found with this email");
+          throw new Error("Invalid credentials");
         }
 
         const valid = await bcrypt.compare(credentials.password, user.password);
         if (!valid) {
-          throw new Error("Invalid password");
+          throw new Error("Invalid credentials");
         }
 
         return {
@@ -51,11 +51,9 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
-      // Initial sign in
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        console.log("🔑 JWT created for:", user.email);
       }
       return token;
     },
@@ -64,7 +62,6 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        console.log("📋 Session created for:", session.user.email);
       }
       return session;
     },
@@ -81,7 +78,6 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/login",
   },
 
-  // Let NextAuth handle cookies automatically
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
 };

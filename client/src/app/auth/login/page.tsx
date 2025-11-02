@@ -16,20 +16,39 @@ export default function LoginPage() {
   const message = searchParams.get("message");
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
+  const validateForm = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return false;
+    }
+    
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      
       const result = await signIn("credentials", {
         email: email.toLowerCase().trim(),
         password,
         callbackUrl: callbackUrl,
         redirect: true, 
       });
-
 
       if (result?.error) {
         console.error("❌ Login failed:", result.error);
@@ -160,15 +179,6 @@ export default function LoginPage() {
                 Create an account
               </a>
             </p>
-
-            {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
-              <p className="text-sm font-medium text-foreground mb-2">Demo Credentials:</p>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>Admin: alice@devflow.com / password123</p>
-                <p>User: carol@devflow.com / password123</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
